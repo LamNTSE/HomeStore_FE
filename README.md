@@ -1,3 +1,6 @@
 # HomeStore_FE
 
-```dev``` native
+**Branches:**  
+-```main```
+-```dev``` Native Android
+-```fltter``` Flutter
