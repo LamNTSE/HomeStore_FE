@@ -26,6 +26,13 @@
             </intent-filter>
         </activity>
 
+        <!-- 🔥 THÊM DÒNG NÀY -->
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
+
+        <activity android:name=".ProfileActivity" />
+
         <activity android:name=".CartActivity" />
 
         <activity

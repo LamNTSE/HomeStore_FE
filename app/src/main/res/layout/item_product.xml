@@ -1,93 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp"
-    android:layout_marginBottom="5dp"
-    android:background="#FFF"
-    android:gravity="center_vertical">
-
-    <ImageView
-        android:id="@+id/imgProduct"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:scaleType="centerCrop"
-        android:src="@mipmap/ic_launcher"/>
+    android:layout_marginHorizontal="14dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="10dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#F0F0F0"
+    android:foreground="?attr/selectableItemBackground"
+    android:backgroundTint="#FFFFFF">
 
     <LinearLayout
-        android:id="@+id/layoutInfo"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingStart="12dp">
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/txtName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tên sản phẩm"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#000"/>
+        <!-- IMAGE + DISCOUNT -->
+        <FrameLayout
+            android:layout_width="100dp"
+            android:layout_height="100dp">
 
-        <TextView
-            android:id="@+id/txtPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="100.0 USD"
-            android:textSize="16sp"
-            android:textColor="#4CAF50"
-            android:textStyle="bold"
-            android:layout_marginTop="4dp"/>
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgProduct"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher"
+                app:shapeAppearanceOverlay="@style/RoundedImage"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="8dp">
-
-            <Button
-                android:id="@+id/btnAddToCartItem"
+            <!-- Discount badge -->
+            <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Thêm vào giỏ"
+                android:layout_height="wrap_content"
+                android:text="-20%"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_gravity="top|start"
+                android:background="@drawable/bg_discount_round"/>
+        </FrameLayout>
+
+        <!-- INFO -->
+        <LinearLayout
+            android:id="@+id/layoutInfo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="16dp">
+
+            <!-- Product name -->
+            <TextView
+                android:id="@+id/txtName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tai nghe Bluetooth cao cấp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <!-- Rating -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐ 4.9 | Đã bán 2.1k"
                 android:textSize="12sp"
-                android:backgroundTint="#FF9800"
-                android:textColor="#FFF"
-                android:paddingHorizontal="15dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"/>
+                android:textColor="#757575"
+                android:layout_marginTop="4dp"/>
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1"/>
+            <!-- Price -->
+            <TextView
+                android:id="@+id/txtPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="799.000đ"
+                android:textSize="19sp"
+                android:textColor="#FF3D00"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp" />
 
-            <ImageButton
-                android:id="@+id/btnEditItem"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_edit"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                android:scaleType="fitCenter"
-                android:contentDescription="Sửa"
-                android:tint="#757575"/>
+            <!-- Button row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp">
 
-            <ImageButton
-                android:id="@+id/btnDeleteItem"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_delete"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                android:layout_marginStart="5dp"
-                android:scaleType="fitCenter"
-                android:contentDescription="Xóa"
-                android:tint="#F44336"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddToCartItem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="Thêm vào giỏ"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    android:textColor="#FFFFFF"
+                    android:icon="@android:drawable/ic_input_add"
+                    android:padding="6dp"
+                    app:cornerRadius="24dp"
+                    app:backgroundTint="#FF6F00"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btnEditItem"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    android:contentDescription="Chỉnh sửa sản phẩm"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="#757575" />
+
+                <ImageButton
+                    android:id="@+id/btnDeleteItem"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_delete"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="Xóa sản phẩm"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="#F44336" />
+            </LinearLayout>
+
         </LinearLayout>
+
     </LinearLayout>
-</LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

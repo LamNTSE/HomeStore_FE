@@ -1,15 +1,14 @@
 package com.example.productmanager;
 
 import android.content.Context;
-
-import com.android.volley.AuthFailureError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-
+import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,6 +32,7 @@ public class ApiClient {
     }
 
     private static RequestQueue requestQueue;
+
 
     private static RequestQueue getQueue(Context context) {
         if (requestQueue == null) {
@@ -143,6 +143,126 @@ public class ApiClient {
             @Override
             public Map<String, String> getHeaders() {
                 return buildAuthHeader("");
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void register(Context context,
+                                String fullName,
+                                String email,
+                                String password,
+                                String phone,
+                                String address,
+                                DataCallback<String> callback) {
+
+        String url = ApiConfig.BASE_URL + "/auth/register";
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("fullName", fullName);
+            body.put("email", email);
+            body.put("password", password);
+            body.put("phone", phone);
+            body.put("address", address);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu đăng ký không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    boolean success = response.optBoolean("success", false);
+                    String message = response.optString("message", "");
+
+                    if (!success) {
+                        callback.onError(message.isEmpty() ? "Đăng ký thất bại" : message);
+                        return;
+                    }
+
+                    callback.onSuccess(null, message.isEmpty() ? "Đăng ký thành công" : message);
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader("");
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void googleLogin(Context context,
+                                   String idToken,
+                                   DataCallback<String> callback) {
+
+        String url = ApiConfig.BASE_URL + "/auth/google-login";
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("idToken", idToken);
+        } catch (JSONException e) {
+            callback.onError("Không thể tạo request body");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                body,
+
+                response -> {
+
+                    boolean success = response.optBoolean("success", false);
+                    if (!success) {
+                        callback.onError(response.optString("message", "Login thất bại"));
+                        return;
+                    }
+
+                    JSONObject data = response.optJSONObject("data");
+                    if (data == null) {
+                        callback.onError("Phản hồi không hợp lệ");
+                        return;
+                    }
+
+                    String jwt = data.optString("token", "");
+                    callback.onSuccess(jwt, "Đăng nhập thành công");
+                },
+
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader("");
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getProfile(Context context,
+                                  String token,
+                                  DataCallback<JSONObject> callback) {
+
+        String url = ApiConfig.BASE_URL + "/auth/profile";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Lỗi tải profile"));
+                        return;
+                    }
+
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
             }
         };
 
@@ -421,6 +541,54 @@ public class ApiClient {
                 return buildAuthHeader(token);
             }
         };
+
+        getQueue(context).add(request);
+    }
+
+    public static void updateCartQuantity(Context context,
+                                          String token,
+                                          int cartItemId,
+                                          int quantity,
+                                          DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Carts/items/" + cartItemId;
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("quantity", quantity);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu số lượng không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                body,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message",
+                                "Cập nhật số lượng thất bại"));
+                        return;
+                    }
+
+                    callback.onSuccess(null,
+                            response.optString("message",
+                                    "Đã cập nhật số lượng"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                10000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
 
         getQueue(context).add(request);
     }

@@ -19,6 +19,7 @@
             android:textColor="#FFFFFF"
             android:layout_centerInParent="true" />
 
+        <!-- CART -->
         <ImageView
             android:id="@+id/btnCartMain"
             android:layout_width="32dp"
@@ -27,6 +28,20 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:contentDescription="Giỏ hàng"/>
+
+        <!-- AVATAR -->
+        <ImageView
+            android:id="@+id/btnAvatar"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_toStartOf="@id/btnCartMain"
+            android:layout_marginEnd="12dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_avatar"
+            android:background="@drawable/bg_avatar_circle"
+            android:padding="4dp"
+            android:contentDescription="Tài khoản" />
+
     </RelativeLayout>
 
     <EditText
@@ -52,5 +67,6 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="20dp"
+        android:contentDescription="Add Product"
         android:src="@android:drawable/ic_input_add" />
 </RelativeLayout>

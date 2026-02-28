@@ -4,15 +4,20 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements ProductAdapter.ProductActionListener {
@@ -69,6 +74,52 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.Pr
 
             @Override
             public void afterTextChanged(Editable s) {}
+        });
+
+        ImageView avatar = findViewById(R.id.btnAvatar);
+
+        avatar.setOnClickListener(v -> {
+
+            PopupMenu popupMenu = new PopupMenu(MainActivity.this, v);
+            popupMenu.getMenuInflater().inflate(R.menu.menu_profile, popupMenu.getMenu());
+
+            // ⭐ Ép hiển thị icon
+            try {
+                Field field = popupMenu.getClass().getDeclaredField("mPopup");
+                field.setAccessible(true);
+                Object menuPopupHelper = field.get(popupMenu);
+                Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
+                Method setForceIcons = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
+                setForceIcons.invoke(menuPopupHelper, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+
+                if (item.getItemId() == R.id.menuProfile) {
+
+                    // 👉 Navigate sang ProfileActivity
+                    Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                    startActivity(intent);
+                    return true;
+                }
+
+                if (item.getItemId() == R.id.menuLogout) {
+
+                    SessionManager.clear(MainActivity.this);
+
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+
+                    return true;
+                }
+
+                return false;
+            });
+
+            popupMenu.show();
         });
     }
 

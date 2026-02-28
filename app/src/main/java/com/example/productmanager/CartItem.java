@@ -44,4 +44,9 @@ public class CartItem {
     public double getSubTotal() {
         return price * quantity;
     }
+
+    // 🔥 QUAN TRỌNG: THÊM CÁI NÀY
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
 }
