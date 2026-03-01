@@ -2,6 +2,12 @@ package com.example.productmanager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Base64;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 public class SessionManager {
     private static final String PREF_NAME = "homestore_session";
@@ -21,6 +27,47 @@ public class SessionManager {
 
     public static boolean isLoggedIn(Context context) {
         return !getToken(context).isEmpty();
+    }
+
+    public static String getUserRole(Context context) {
+        return extractRoleFromToken(getToken(context));
+    }
+
+    public static boolean isAdmin(Context context) {
+        return "admin".equalsIgnoreCase(getUserRole(context));
+    }
+
+    private static String extractRoleFromToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] parts = token.split("\\.");
+        if (parts.length < 2) {
+            return "";
+        }
+
+        try {
+            byte[] decoded = Base64.decode(parts[1], Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+            String payload = new String(decoded, StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(payload);
+
+            String[] roleKeys = new String[] {
+                    "role",
+                    "roles",
+                    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            };
+
+            for (String key : roleKeys) {
+                String roleValue = json.optString(key, "");
+                if (!roleValue.isEmpty()) {
+                    return roleValue.toLowerCase(Locale.ROOT);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return "";
     }
 
     public static void clear(Context context) {

@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.Pr
     EditText edtSearch;
     ImageView btnCartMain;
     String authToken;
+    boolean isAdmin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +48,13 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.Pr
             return;
         }
 
+        isAdmin = SessionManager.isAdmin(this);
+
         productList = new ArrayList<>();
-        adapter = new ProductAdapter(this, R.layout.item_product, productList, this);
+        adapter = new ProductAdapter(this, R.layout.item_product, productList, this, isAdmin);
         lvProduct.setAdapter(adapter);
+
+        fabAdd.setVisibility(isAdmin ? android.view.View.VISIBLE : android.view.View.GONE);
 
         loadProducts("");
 
@@ -153,6 +158,11 @@ public class MainActivity extends AppCompatActivity implements ProductAdapter.Pr
 
     @Override
     public void onDeleteProduct(Product product) {
+        if (!isAdmin) {
+            Toast.makeText(this, "Bạn không có quyền xóa sản phẩm", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         ApiClient.deleteProduct(this, authToken, product.getId(), new ApiClient.DataCallback<Void>() {
             @Override
             public void onSuccess(Void data, String message) {

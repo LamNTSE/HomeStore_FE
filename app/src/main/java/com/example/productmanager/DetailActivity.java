@@ -20,6 +20,7 @@ public class DetailActivity extends AppCompatActivity {
     private int productId;
     private Product currentProduct;
     private String authToken;
+    private boolean isAdmin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +41,9 @@ public class DetailActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        isAdmin = SessionManager.isAdmin(this);
+        btnEdit.setVisibility(isAdmin ? android.view.View.VISIBLE : android.view.View.GONE);
 
         Intent intent = getIntent();
         if (intent != null) {
@@ -69,6 +73,10 @@ public class DetailActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
 
         btnEdit.setOnClickListener(v -> {
+            if (!isAdmin) {
+                Toast.makeText(this, "Bạn không có quyền sửa sản phẩm", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent editIntent = new Intent(DetailActivity.this, AddEditActivity.class);
             editIntent.putExtra("PRODUCT_ID", productId);
             startActivity(editIntent);

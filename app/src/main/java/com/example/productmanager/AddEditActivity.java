@@ -42,6 +42,12 @@ public class AddEditActivity extends AppCompatActivity {
             return;
         }
 
+        if (!SessionManager.isAdmin(this)) {
+            Toast.makeText(this, "Bạn không có quyền thao tác sản phẩm", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         handleIntentData();
 
         btnUpload.setOnClickListener(v -> {

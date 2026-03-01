@@ -26,12 +26,14 @@ public class ProductAdapter extends BaseAdapter {
     private int layout;
     private List<Product> productList;
     private ProductActionListener listener;
+    private boolean isAdmin;
 
-    public ProductAdapter(MainActivity context, int layout, List<Product> productList, ProductActionListener listener) {
+    public ProductAdapter(MainActivity context, int layout, List<Product> productList, ProductActionListener listener, boolean isAdmin) {
         this.context = context;
         this.layout = layout;
         this.productList = productList;
         this.listener = listener;
+        this.isAdmin = isAdmin;
     }
 
     @Override
@@ -98,6 +100,14 @@ public class ProductAdapter extends BaseAdapter {
                 listener.onAddToCart(product);
             }
         });
+
+        if (isAdmin) {
+            holder.btnEdit.setVisibility(View.VISIBLE);
+            holder.btnDelete.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnEdit.setVisibility(View.GONE);
+            holder.btnDelete.setVisibility(View.GONE);
+        }
 
         holder.btnEdit.setOnClickListener(v -> {
             Intent intent = new Intent(context, AddEditActivity.class);
