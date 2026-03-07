@@ -2,6 +2,7 @@ package com.example.productmanager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.*;
 
@@ -11,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+
+import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -32,8 +35,9 @@ public class LoginActivity extends AppCompatActivity {
         btnGoogleLogin = findViewById(R.id.btnGoogleLogin);
         txtRegister = findViewById(R.id.txtRegister);
 
+        // Auto login nếu đã có token
         if (SessionManager.isLoggedIn(this)) {
-            goToMain();
+            redirectByRole(SessionManager.getToken(this));
             return;
         }
 
@@ -43,7 +47,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private void setupEvents() {
 
-        // ===== LOGIN THƯỜNG =====
         btnLogin.setOnClickListener(view -> {
 
             String email = edtUsername.getText().toString().trim();
@@ -61,7 +64,7 @@ public class LoginActivity extends AppCompatActivity {
                 public void onSuccess(String token, String message) {
                     btnLogin.setEnabled(true);
                     SessionManager.saveToken(LoginActivity.this, token);
-                    goToMain();
+                    redirectByRole(token);
                 }
 
                 @Override
@@ -72,7 +75,6 @@ public class LoginActivity extends AppCompatActivity {
             });
         });
 
-        // ===== GOOGLE LOGIN =====
         btnGoogleLogin.setOnClickListener(v -> {
             btnGoogleLogin.setEnabled(false);
             Intent signInIntent = googleSignInClient.getSignInIntent();
@@ -87,7 +89,7 @@ public class LoginActivity extends AppCompatActivity {
     private void setupGoogleLogin() {
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id)) // phải là WEB CLIENT ID
+                .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
@@ -100,51 +102,23 @@ public class LoginActivity extends AppCompatActivity {
 
         if (requestCode != RC_SIGN_IN) return;
 
-        if (data == null) {
-            btnGoogleLogin.setEnabled(true);
-            Toast.makeText(this, "Google login bị hủy", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         Task<GoogleSignInAccount> task =
                 GoogleSignIn.getSignedInAccountFromIntent(data);
 
         try {
             GoogleSignInAccount account = task.getResult(ApiException.class);
 
-            if (account == null) {
-                btnGoogleLogin.setEnabled(true);
-                Toast.makeText(this, "Không lấy được tài khoản Google", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            assert account.getIdToken() != null;
-            Log.d("ID_TOKEN", account.getIdToken());
-
             String idToken = account.getIdToken();
-
-            if (idToken == null || idToken.isEmpty()) {
-                btnGoogleLogin.setEnabled(true);
-                Toast.makeText(this, "Không lấy được ID Token", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Log.d("GOOGLE_ID_TOKEN", idToken);
-
-            // Sign out để tránh auto login lại
             googleSignInClient.signOut();
 
             loginWithGoogleToServer(idToken);
 
-        } catch (ApiException e) {
+        } catch (Exception e) {
             btnGoogleLogin.setEnabled(true);
-            Log.e("GOOGLE_LOGIN_ERROR", "Status: " + e.getStatusCode(), e);
-            Toast.makeText(this,
-                    "Google login thất bại: " + e.getStatusCode(),
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Google login thất bại", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // ===== GỬI TOKEN LÊN SERVER =====
     private void loginWithGoogleToServer(String idToken) {
 
         ApiClient.googleLogin(this, idToken, new ApiClient.DataCallback<String>() {
@@ -152,41 +126,92 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String token, String message) {
 
-                if (isFinishing() || isDestroyed()) return;
-
                 btnGoogleLogin.setEnabled(true);
 
-                if (token == null || token.trim().isEmpty()) {
+                if (token == null || token.isEmpty()) {
                     Toast.makeText(LoginActivity.this,
                             "Server trả về token rỗng",
                             Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Log.d("JWT_TOKEN_FROM_SERVER", token);
+                String role = getRoleFromToken(token);
+
+                // ❌ Chặn admin login bằng Google
+                if ("Admin".equalsIgnoreCase(role)) {
+                    Toast.makeText(LoginActivity.this,
+                            "Admin không được đăng nhập bằng Google",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 SessionManager.saveToken(LoginActivity.this, token);
-                goToMain();
+                redirectByRole(token);
             }
 
             @Override
             public void onError(String error) {
-
-                if (isFinishing() || isDestroyed()) return;
-
                 btnGoogleLogin.setEnabled(true);
-
-                Log.e("GOOGLE_LOGIN_SERVER_ERROR", error);
-
-                Toast.makeText(LoginActivity.this,
-                        error,
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    // ===== PHÂN QUYỀN =====
+    private void redirectByRole(String token) {
+        String role = getRoleFromToken(token);
+
+        if ("Admin".equalsIgnoreCase(role)) {
+            startActivity(new Intent(this, AdminHomeActivity.class));
+        } else {
+            startActivity(new Intent(this, MainActivity.class));
+        }
+
+        finish();
+    }
+
+    private String getRoleFromToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) return "";
+
+            String payload = new String(Base64.decode(parts[1], Base64.URL_SAFE));
+            JSONObject json = new JSONObject(payload);
+
+            // Thử nhiều key khác nhau
+            if (json.has("role"))
+                return json.getString("role");
+
+            if (json.has("roles"))
+                return json.getString("roles");
+
+            if (json.has("http://schemas.microsoft.com/ws/2008/06/identity/claims/role"))
+                return json.getString("http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+
+            return "";
+
+        } catch (Exception e) {
+            return "";
+        }
+    }
     private void goToMain() {
-        startActivity(new Intent(this, MainActivity.class));
+        String token = SessionManager.getToken(this);
+
+        if (token == null || token.isEmpty()) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+            return;
+        }
+
+        String role = getRoleFromToken(token);
+
+        if ("Admin".equalsIgnoreCase(role)) {
+            startActivity(new Intent(this, AdminHomeActivity.class));
+        } else {
+            startActivity(new Intent(this, MainActivity.class));
+        }
+
         finish();
     }
 }
+

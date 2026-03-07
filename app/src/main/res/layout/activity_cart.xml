@@ -79,6 +79,34 @@
         android:elevation="12dp">
 
         <LinearLayout
+            android:id="@+id/layoutVoucher"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp"
+            android:padding="8dp"
+            android:background="#F3E5F5">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Voucher"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="#6200EE"/>
+
+            <TextView
+                android:id="@+id/tvVoucherCode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Chọn voucher"
+                android:textColor="#6200EE"
+                android:gravity="end"/>
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -91,6 +119,8 @@
                 android:text="Tổng tiền"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
+
+
 
             <TextView
                 android:id="@+id/tvTotalPrice"

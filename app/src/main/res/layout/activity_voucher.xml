@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F5F5">
+
+    <!-- ⭐ Box nhập voucher -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
+
+        <EditText
+            android:id="@+id/edtVoucherCode"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Nhập mã voucher"
+            android:textSize="15sp"
+            android:paddingStart="12dp"/>
+
+        <Button
+            android:id="@+id/btnCheckVoucher"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Áp dụng"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#FF5722"/>
+    </LinearLayout>
+
+    <!-- khoảng cách -->
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="8dp"/>
+
+    <!-- ⭐ Danh sách voucher -->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvVoucher"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="12dp"
+        android:clipToPadding="false"/>
+
+</LinearLayout>
+

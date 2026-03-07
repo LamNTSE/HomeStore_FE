@@ -40,6 +40,7 @@ dependencies {
     implementation libs.play.services.auth
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
     testImplementation libs.junit
+    implementation libs.gson
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 }

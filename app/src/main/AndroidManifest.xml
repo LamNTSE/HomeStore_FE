@@ -33,7 +33,17 @@
 
         <activity android:name=".ProfileActivity" />
 
+        <activity android:name=".AdminHomeActivity" />
+
         <activity android:name=".CartActivity" />
+
+        <activity android:name=".ManageProductsActivity" />
+
+        <activity android:name=".ManageVouchersActivity" />
+
+        <activity android:name=".VoucherActivity" />
+
+        <activity android:name=".VoucherDetailActivity"/>
 
         <activity
             android:name=".MainActivity"

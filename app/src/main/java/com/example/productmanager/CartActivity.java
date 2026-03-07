@@ -8,11 +8,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.content.Intent;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.productmanager.ApiClient;
-import com.example.productmanager.CartItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +23,19 @@ public class CartActivity extends AppCompatActivity
     private Button btnClearCart;
     private LinearLayout layoutFooter;
 
+    private LinearLayout layoutVoucher;
+    private TextView tvVoucherCode;
+
     private CartAdapter adapter;
     private List<CartItem> cartItems;
     private String authToken;
+
+    private Voucher appliedVoucher = null;
+
+    private static final int REQUEST_VOUCHER = 1001;
+
+    private double discountAmount = 0;
+    private String voucherCode = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +59,12 @@ public class CartActivity extends AppCompatActivity
         btnBackCart.setOnClickListener(v -> finish());
 
         btnClearCart.setOnClickListener(v -> clearCart());
+
+        // CLICK mở trang chọn voucher
+        layoutVoucher.setOnClickListener(v -> openVoucherPage());
     }
+
+
 
     private void initViews() {
         btnBackCart = findViewById(R.id.btnBackCart);
@@ -60,7 +72,11 @@ public class CartActivity extends AppCompatActivity
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
         lvCart = findViewById(R.id.lvCart);
         btnClearCart = findViewById(R.id.btnClearCart);
+
         layoutFooter = findViewById(R.id.layoutFooter);
+
+        layoutVoucher = findViewById(R.id.layoutVoucher);
+        tvVoucherCode = findViewById(R.id.tvVoucherCode);
     }
 
     // =========================
@@ -104,12 +120,202 @@ public class CartActivity extends AppCompatActivity
         }
     }
 
-    private void updateTotal() {
+    // =========================
+    // TĂNG SỐ LƯỢNG
+    // =========================
+    @Override
+    public void onIncreaseQuantity(CartItem item) {
+
+        int newQuantity = item.getQuantity() + 1;
+
+        ApiClient.updateCartQuantity(
+                this,
+                authToken,
+                item.getCartItemId(),
+                newQuantity,
+                new ApiClient.DataCallback<Void>() {
+
+                    @Override
+                    public void onSuccess(Void data, String message) {
+                        item.setQuantity(newQuantity);
+                        adapter.notifyDataSetChanged();
+                        updateTotal();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Toast.makeText(CartActivity.this,
+                                errorMessage,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    // =========================
+    // GIẢM SỐ LƯỢNG
+    // =========================
+    @Override
+    public void onDecreaseQuantity(CartItem item) {
+
+        if (item.getQuantity() <= 1) return;
+
+        int newQuantity = item.getQuantity() - 1;
+
+        ApiClient.updateCartQuantity(
+                this,
+                authToken,
+                item.getCartItemId(),
+                newQuantity,
+                new ApiClient.DataCallback<Void>() {
+
+                    @Override
+                    public void onSuccess(Void data, String message) {
+                        item.setQuantity(newQuantity);
+                        adapter.notifyDataSetChanged();
+                        updateTotal();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Toast.makeText(CartActivity.this,
+                                errorMessage,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+
+    // =========================
+    // RESULT VOUCHER
+    // =========================
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_VOUCHER && resultCode == RESULT_OK) {
+
+            voucherCode = data.getStringExtra("voucherCode");
+
+            if (voucherCode != null && !voucherCode.isEmpty()) {
+
+                tvVoucherCode.setText(voucherCode);
+
+                applyVoucher(voucherCode);
+            }
+        }
+    }
+
+    private void openVoucherPage() {
+
+        Intent intent = new Intent(this, VoucherActivity.class);
+        startActivityForResult(intent, REQUEST_VOUCHER);
+    }
+
+    private double calculateTotal() {
+
         double total = 0;
+
         for (CartItem item : cartItems) {
             total += item.getSubTotal();
         }
-        tvTotalPrice.setText(String.format("%.2f USD", total));
+
+        return total;
+    }
+
+    // =========================
+    // APPLY VOUCHER
+    // =========================
+    private void applyVoucher(String code) {
+
+        ApiClient.getVoucherByCode(
+                this,
+                authToken,
+                code,
+                new ApiClient.DataCallback<Voucher>() {
+
+                    @Override
+                    public void onSuccess(Voucher voucher, String message) {
+
+                        double total = calculateTotal();
+
+                        if (total < voucher.getMinOrderValue()) {
+
+                            Toast.makeText(CartActivity.this,
+                                    "Đơn hàng phải từ " + formatVND(voucher.getMinOrderValue()),
+                                    Toast.LENGTH_SHORT).show();
+
+                            appliedVoucher = null;
+                            discountAmount = 0;
+                            tvVoucherCode.setText("Chọn voucher");
+
+                            updateTotal();
+                            return;
+                        }
+
+                        appliedVoucher = voucher;
+
+                        Toast.makeText(CartActivity.this,
+                                "Áp dụng voucher thành công",
+                                Toast.LENGTH_SHORT).show();
+
+                        updateTotal();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+
+                        Toast.makeText(CartActivity.this,
+                                errorMessage,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private String formatVND(double amount) {
+        return String.format("%,.0f ₫", amount);
+    }
+
+    private void updateTotal() {
+
+        double total = calculateTotal();
+
+        discountAmount = 0;
+
+        if (appliedVoucher != null) {
+
+            if (total >= appliedVoucher.getMinOrderValue()) {
+
+                if ("FIXED".equalsIgnoreCase(appliedVoucher.getDiscountType())) {
+
+                    discountAmount = appliedVoucher.getDiscountValue();
+
+                } else if ("PERCENT".equalsIgnoreCase(appliedVoucher.getDiscountType())) {
+
+                    discountAmount = total * appliedVoucher.getDiscountValue() / 100;
+                }
+
+                if (discountAmount > total) {
+                    discountAmount = total;
+                }
+
+            } else {
+                // total không đủ điều kiện -> hủy voucher
+                appliedVoucher = null;
+                discountAmount = 0;
+
+                tvVoucherCode.setText("Chọn voucher");
+
+                Toast.makeText(this,
+                        "Đơn hàng không còn đủ điều kiện áp dụng voucher",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        double finalTotal = total - discountAmount;
+
+        if (finalTotal < 0) finalTotal = 0;
+
+        tvTotalPrice.setText(formatVND(finalTotal));
     }
 
     // =========================
@@ -145,70 +351,6 @@ public class CartActivity extends AppCompatActivity
                 });
     }
 
-    // =========================
-    // TĂNG SỐ LƯỢNG
-    // =========================
-    @Override
-    public void onIncreaseQuantity(CartItem item) {
-
-        int newQuantity = item.getQuantity() + 1;
-
-        ApiClient.updateCartQuantity(
-                this,
-                authToken,
-                item.getCartItemId(),
-                newQuantity,
-                new ApiClient.DataCallback<Void>() {
-
-                    @Override
-                    public void onSuccess(Void data, String message) {
-                        item.setQuantity(newQuantity);
-                        adapter.notifyDataSetChanged();
-                        updateTotal();
-                    }
-
-                    @Override
-                    public void onError(String errorMessage) {
-                        Toast.makeText(CartActivity.this,
-                                errorMessage,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-
-    // =========================
-    // GIẢM SỐ LƯỢNG
-    // =========================
-    @Override
-    public void onDecreaseQuantity(CartItem item) {
-
-        if (item.getQuantity() <= 1) return;
-
-        int newQuantity = item.getQuantity() - 1;
-
-        ApiClient.updateCartQuantity(
-                this,
-                authToken,
-                item.getCartItemId(),
-                newQuantity,
-                new ApiClient.DataCallback<Void>() {
-
-                    @Override
-                    public void onSuccess(Void data, String message) {
-                        item.setQuantity(newQuantity);
-                        adapter.notifyDataSetChanged();
-                        updateTotal();
-                    }
-
-                    @Override
-                    public void onError(String errorMessage) {
-                        Toast.makeText(CartActivity.this,
-                                errorMessage,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
 
     // =========================
     // XÓA 1 SẢN PHẨM
@@ -240,4 +382,5 @@ public class CartActivity extends AppCompatActivity
                     }
                 });
     }
+
 }

@@ -33,8 +33,9 @@
                 android:src="@mipmap/ic_launcher"
                 app:shapeAppearanceOverlay="@style/RoundedImage"/>
 
-            <!-- Discount badge -->
+            <!-- 🔥 Discount badge (có ID để ẩn khi admin) -->
             <TextView
+                android:id="@+id/txtDiscount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="-20%"
@@ -61,21 +62,37 @@
                 android:id="@+id/txtName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tai nghe Bluetooth cao cấp"
+                android:text="Tên sản phẩm"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#1A1A1A"
                 android:maxLines="2"
                 android:ellipsize="end" />
 
-            <!-- Rating -->
-            <TextView
+            <!-- 🔥 Rating Layout (gom lại để admin ẩn 1 lần) -->
+            <LinearLayout
+                android:id="@+id/layoutRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⭐ 4.9 | Đã bán 2.1k"
-                android:textSize="12sp"
-                android:textColor="#757575"
-                android:layout_marginTop="4dp"/>
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/txtRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⭐ 4.9"
+                    android:textSize="12sp"
+                    android:textColor="#757575"/>
+
+                <TextView
+                    android:id="@+id/txtSold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" | Đã bán 2.1k"
+                    android:textSize="12sp"
+                    android:textColor="#757575"/>
+            </LinearLayout>
 
             <!-- Price -->
             <TextView
