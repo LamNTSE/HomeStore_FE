@@ -24,6 +24,10 @@ public class ProductAdapter extends BaseAdapter {
         void onAddToCart(Product product);
     }
 
+    private String formatVND(double amount) {
+        return String.format("%,.0f ₫", amount);
+    }
+
     private Context context;
     private final int layout;
     private List<Product> productList;
@@ -84,10 +88,11 @@ public class ProductAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
+
         Product product = productList.get(position);
 
         holder.txtName.setText(product.getName());
-        holder.txtPrice.setText(String.format("%.2f USD", product.getPrice()));
+        holder.txtPrice.setText(formatVND(product.getPrice()));
 
         if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
             Glide.with(context)
