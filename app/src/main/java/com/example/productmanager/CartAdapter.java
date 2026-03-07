@@ -55,6 +55,10 @@ public class CartAdapter extends BaseAdapter {
     // =========================
     // VIEW HOLDER
     // =========================
+
+    private String formatVND(double amount) {
+        return String.format("%,.0f ₫", amount);
+    }
     static class ViewHolder {
         TextView tvName, tvPrice, tvQuantity;
         ImageView img;
@@ -91,7 +95,7 @@ public class CartAdapter extends BaseAdapter {
         holder.tvQuantity.setText(String.valueOf(item.getQuantity()));
 
         holder.tvPrice.setText(
-                String.format("%.2f USD", item.getSubTotal())
+                formatVND(item.getSubTotal())
         );
 
         if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {

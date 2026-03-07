@@ -592,4 +592,349 @@ public class ApiClient {
 
         getQueue(context).add(request);
     }
+
+    public static void getVouchers(Context context,
+                                   String token,
+                                   DataCallback<List<Voucher>> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải voucher thất bại"));
+                        return;
+                    }
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Voucher> vouchers = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj == null) continue;
+
+                            vouchers.add(new Voucher(
+                                    obj.optInt("voucherId"),
+                                    obj.optString("code"),
+                                    obj.optString("discountType"),
+                                    obj.optDouble("discountValue"),
+                                    obj.optDouble("minOrderValue"),
+                                    obj.optInt("maxUsageCount"),
+                                    obj.optString("startDate"),
+                                    obj.optString("expiryDate"),
+                                    obj.optBoolean("isActive")
+                            ));
+                        }
+                    }
+
+                    callback.onSuccess(vouchers, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getVoucherById(Context context,
+                                      String token,
+                                      int voucherId,
+                                      DataCallback<Voucher> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers/" + voucherId;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Không tìm thấy voucher"));
+                        return;
+                    }
+
+                    JSONObject data = response.optJSONObject("data");
+                    if (data == null) {
+                        callback.onError("Không có dữ liệu voucher");
+                        return;
+                    }
+
+                    Voucher voucher = new Voucher(
+                            data.optInt("voucherId"),
+                            data.optString("code"),
+                            data.optString("discountType"),
+                            data.optDouble("discountValue"),
+                            data.optDouble("minOrderValue"),
+                            data.optInt("maxUsageCount"),
+                            data.optString("startDate"),
+                            data.optString("expiryDate"),
+                            data.optBoolean("isActive")
+                    );
+
+                    callback.onSuccess(voucher, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getVoucherByCode(Context context,
+                                        String token,
+                                        String code,
+                                        DataCallback<Voucher> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers/by-code/" + code;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Voucher không hợp lệ"));
+                        return;
+                    }
+
+                    JSONObject data = response.optJSONObject("data");
+                    if (data == null) {
+                        callback.onError("Không có dữ liệu voucher");
+                        return;
+                    }
+
+                    Voucher voucher = new Voucher(
+                            data.optInt("voucherId"),
+                            data.optString("code"),
+                            data.optString("discountType"),
+                            data.optDouble("discountValue"),
+                            data.optDouble("minOrderValue"),
+                            data.optInt("maxUsageCount"),
+                            data.optString("startDate"),
+                            data.optString("expiryDate"),
+                            data.optBoolean("isActive")
+                    );
+
+                    callback.onSuccess(voucher, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void createVoucher(Context context,
+                                     String token,
+                                     String code,
+                                     String discountType,
+                                     double discountValue,
+                                     double minOrderValue,
+                                     int maxUsageCount,
+                                     String startDate,
+                                     String expiryDate,
+                                     boolean isActive,
+                                     DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers";
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("code", code);
+            body.put("discountType", discountType);
+            body.put("discountValue", discountValue);
+            body.put("minOrderValue", minOrderValue);
+            body.put("maxUsageCount", maxUsageCount);
+            body.put("startDate", startDate);
+            body.put("expiryDate", expiryDate);
+            body.put("isActive", isActive);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu voucher không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                body,
+                response -> {
+
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Tạo voucher thất bại"));
+                        return;
+                    }
+
+                    callback.onSuccess(null,
+                            response.optString("message", "Tạo voucher thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void updateVoucher(Context context,
+                                     String token,
+                                     int voucherId,
+                                     String code,
+                                     String discountType,
+                                     double discountValue,
+                                     double minOrderValue,
+                                     int maxUsageCount,
+                                     String startDate,
+                                     String expiryDate,
+                                     boolean isActive,
+                                     DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers/" + voucherId;
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("code", code);
+            body.put("discountType", discountType);
+            body.put("discountValue", discountValue);
+            body.put("minOrderValue", minOrderValue);
+            body.put("maxUsageCount", maxUsageCount);
+            body.put("startDate", startDate);
+            body.put("expiryDate", expiryDate);
+            body.put("isActive", isActive);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu voucher không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                body,
+                response -> {
+
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Cập nhật voucher thất bại"));
+                        return;
+                    }
+
+                    callback.onSuccess(null,
+                            response.optString("message", "Cập nhật voucher thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void deleteVoucher(Context context,
+                                     String token,
+                                     int voucherId,
+                                     DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers/" + voucherId;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.DELETE,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Xóa voucher thất bại"));
+                        return;
+                    }
+
+                    callback.onSuccess(null,
+                            response.optString("message", "Xóa voucher thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getAvailableVouchers(Context context,
+                                            String token,
+                                            DataCallback<List<Voucher>> callback) {
+
+        String url = ApiConfig.BASE_URL + "/Vouchers/available";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải voucher thất bại"));
+                        return;
+                    }
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Voucher> vouchers = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj == null) continue;
+
+                            vouchers.add(new Voucher(
+                                    obj.optInt("voucherId"),
+                                    obj.optString("code"),
+                                    obj.optString("discountType"),
+                                    obj.optDouble("discountValue"),
+                                    obj.optDouble("minOrderValue"),
+                                    obj.optInt("maxUsageCount"),
+                                    obj.optString("startDate"),
+                                    obj.optString("expiryDate"),
+                                    obj.optBoolean("isActive")
+                            ));
+                        }
+                    }
+
+                    callback.onSuccess(vouchers, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
 }
