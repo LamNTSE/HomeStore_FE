@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -92,11 +93,19 @@ public class VoucherAdapter extends RecyclerView.Adapter<VoucherAdapter.ViewHold
             holder.btnEdit.setVisibility(View.GONE);
             holder.btnDelete.setVisibility(View.GONE);
 
-            holder.itemView.setOnClickListener(view -> {
-                if (selectListener != null) {
-                    selectListener.onSelect(v);
-                }
-            });
+            if (!v.isActive()) {
+                holder.itemView.setAlpha(0.5f);
+                holder.itemView.setOnClickListener(view ->
+                    Toast.makeText(context, "Voucher đã hết hiệu lực", Toast.LENGTH_SHORT).show()
+                );
+            } else {
+                holder.itemView.setAlpha(1.0f);
+                holder.itemView.setOnClickListener(view -> {
+                    if (selectListener != null) {
+                        selectListener.onSelect(v);
+                    }
+                });
+            }
 
             return;
         }

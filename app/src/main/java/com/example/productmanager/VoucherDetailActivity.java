@@ -71,6 +71,14 @@ public class VoucherDetailActivity extends AppCompatActivity {
         tvMaxUsageValue = rowMaxUsage.findViewById(R.id.tvValue);
         tvStartValue = rowStart.findViewById(R.id.tvValue);
         tvEndValue = rowEnd.findViewById(R.id.tvValue);
+
+        // Set labels cho các row
+        ((TextView) rowType.findViewById(R.id.tvLabel)).setText("Discount Type");
+        ((TextView) rowValue.findViewById(R.id.tvLabel)).setText("Discount Value");
+        ((TextView) rowMinOrder.findViewById(R.id.tvLabel)).setText("Min Order Value");
+        ((TextView) rowMaxUsage.findViewById(R.id.tvLabel)).setText("Max Usage Count");
+        ((TextView) rowStart.findViewById(R.id.tvLabel)).setText("Start Date");
+        ((TextView) rowEnd.findViewById(R.id.tvLabel)).setText("Expiry Date");
     }
 
     private void setupToolbar() {

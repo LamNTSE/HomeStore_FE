@@ -86,6 +86,15 @@ public class VoucherActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Voucher voucher, String message) {
 
+                            if (!voucher.isActive()) {
+                                Toast.makeText(
+                                        VoucherActivity.this,
+                                        "Voucher đã hết hiệu lực",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                                return;
+                            }
+
                             Intent intent = new Intent();
                             intent.putExtra("voucherCode", voucher.getCode());
 

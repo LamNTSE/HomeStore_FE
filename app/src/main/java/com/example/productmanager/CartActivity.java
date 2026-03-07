@@ -236,6 +236,17 @@ public class CartActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(Voucher voucher, String message) {
 
+                        if (!voucher.isActive()) {
+                            Toast.makeText(CartActivity.this,
+                                    "Voucher đã hết hiệu lực",
+                                    Toast.LENGTH_SHORT).show();
+                            appliedVoucher = null;
+                            discountAmount = 0;
+                            tvVoucherCode.setText("Chọn voucher");
+                            updateTotal();
+                            return;
+                        }
+
                         double total = calculateTotal();
 
                         if (total < voucher.getMinOrderValue()) {
