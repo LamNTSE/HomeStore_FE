@@ -9,6 +9,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Intent;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -340,6 +341,16 @@ public class CartActivity extends AppCompatActivity
                     Toast.LENGTH_SHORT).show();
             return;
         }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa giỏ hàng")
+                .setMessage("Bạn có chắc muốn xóa toàn bộ sản phẩm trong giỏ hàng?")
+                .setPositiveButton("Xóa", (dialog, which) -> doClearCart())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void doClearCart() {
 
         ApiClient.clearCart(this, authToken,
                 new ApiClient.DataCallback<Void>() {

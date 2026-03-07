@@ -20,21 +20,30 @@
             android:layout_centerInParent="true" />
 
         <!-- CART -->
-        <ImageView
-            android:id="@+id/btnCartMain"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_cart"
+        <FrameLayout
+            android:id="@+id/frameCart"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:contentDescription="Giỏ hàng"/>
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <ImageView
+                android:id="@+id/btnCartMain"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_cart"
+                android:contentDescription="Giỏ hàng"/>
+        </FrameLayout>
 
         <!-- AVATAR -->
         <ImageView
             android:id="@+id/btnAvatar"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:layout_toStartOf="@id/btnCartMain"
+            android:layout_toStartOf="@id/frameCart"
             android:layout_marginEnd="12dp"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_avatar"
