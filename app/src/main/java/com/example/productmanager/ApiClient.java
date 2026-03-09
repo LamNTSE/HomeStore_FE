@@ -987,7 +987,7 @@ public class ApiClient {
                                     String token,
                                     DataCallback<List<Order>> callback) {
 
-        String url = ApiConfig.BASE_URL + "/orders";
+        String url = ApiConfig.BASE_URL + "/orders/all";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
