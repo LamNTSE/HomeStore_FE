@@ -90,4 +90,38 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <LinearLayout
+        android:id="@+id/layoutActions"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="end"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btnConfirm"
+            android:text="Xác nhận"
+            android:textSize="13sp"
+            android:backgroundTint="#4CAF50"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp"
+            android:minHeight="36dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:text="Huỷ đơn"
+            android:textSize="13sp"
+            android:backgroundTint="#F44336"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:minHeight="36dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
 </LinearLayout>

@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManageOrdersActivity extends AppCompatActivity implements OrderAdapter.OrderActionListener {
+public class UserOrdersActivity extends AppCompatActivity implements OrderAdapter.OrderActionListener {
 
     private RecyclerView rvOrders;
     private TextView tvEmpty;
@@ -24,15 +24,15 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manage_orders);
+        setContentView(R.layout.activity_user_orders);
 
-        ImageView btnBack = findViewById(R.id.btnBackOrders);
-        rvOrders = findViewById(R.id.rvOrders);
-        tvEmpty = findViewById(R.id.tvEmptyOrders);
+        ImageView btnBack = findViewById(R.id.btnBackUserOrders);
+        rvOrders = findViewById(R.id.rvUserOrders);
+        tvEmpty = findViewById(R.id.tvEmptyUserOrders);
 
         btnBack.setOnClickListener(v -> finish());
 
-        adapter = new OrderAdapter(this, orderList, true, this);
+        adapter = new OrderAdapter(this, orderList, false, this);
         rvOrders.setLayoutManager(new LinearLayoutManager(this));
         rvOrders.setAdapter(adapter);
     }
@@ -45,7 +45,7 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
 
     private void loadOrders() {
         String token = SessionManager.getToken(this);
-        ApiClient.getAllOrders(this, token, new ApiClient.DataCallback<List<Order>>() {
+        ApiClient.getMyOrders(this, token, new ApiClient.DataCallback<List<Order>>() {
             @Override
             public void onSuccess(List<Order> data, String message) {
                 orderList.clear();
@@ -56,7 +56,7 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
 
             @Override
             public void onError(String error) {
-                Toast.makeText(ManageOrdersActivity.this, error, Toast.LENGTH_SHORT).show();
+                Toast.makeText(UserOrdersActivity.this, error, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -64,21 +64,21 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
     @Override
     public void onConfirm(Order order) {
         new AlertDialog.Builder(this)
-                .setTitle("Xác nhận đơn hàng")
-                .setMessage("Chuyển đơn hàng #" + order.getOrderId() + " sang trạng thái Shipping?")
-                .setPositiveButton("Xác nhận", (d, w) -> {
+                .setTitle("Xác nhận nhận hàng")
+                .setMessage("Bạn đã nhận được đơn hàng #" + order.getOrderId() + "?")
+                .setPositiveButton("Đã nhận", (d, w) -> {
                     String token = SessionManager.getToken(this);
-                    ApiClient.updateOrderStatus(this, token, order.getOrderId(), "Shipping",
+                    ApiClient.confirmDelivery(this, token, order.getOrderId(),
                             new ApiClient.DataCallback<Void>() {
                                 @Override
                                 public void onSuccess(Void data, String message) {
-                                    Toast.makeText(ManageOrdersActivity.this, message, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(UserOrdersActivity.this, message, Toast.LENGTH_SHORT).show();
                                     loadOrders();
                                 }
 
                                 @Override
                                 public void onError(String error) {
-                                    Toast.makeText(ManageOrdersActivity.this, error, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(UserOrdersActivity.this, error, Toast.LENGTH_SHORT).show();
                                 }
                             });
                 })
@@ -93,17 +93,17 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
                 .setMessage("Bạn có chắc muốn huỷ đơn hàng #" + order.getOrderId() + "?")
                 .setPositiveButton("Huỷ đơn", (d, w) -> {
                     String token = SessionManager.getToken(this);
-                    ApiClient.updateOrderStatus(this, token, order.getOrderId(), "Cancelled",
+                    ApiClient.cancelOrder(this, token, order.getOrderId(),
                             new ApiClient.DataCallback<Void>() {
                                 @Override
                                 public void onSuccess(Void data, String message) {
-                                    Toast.makeText(ManageOrdersActivity.this, message, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(UserOrdersActivity.this, message, Toast.LENGTH_SHORT).show();
                                     loadOrders();
                                 }
 
                                 @Override
                                 public void onError(String error) {
-                                    Toast.makeText(ManageOrdersActivity.this, error, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(UserOrdersActivity.this, error, Toast.LENGTH_SHORT).show();
                                 }
                             });
                 })

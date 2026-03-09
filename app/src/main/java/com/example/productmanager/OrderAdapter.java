@@ -6,6 +6,8 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,12 +18,21 @@ import java.util.Locale;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> {
 
+    public interface OrderActionListener {
+        void onConfirm(Order order);
+        void onCancel(Order order);
+    }
+
     private Context context;
     private List<Order> list;
+    private boolean isAdminMode;
+    private OrderActionListener listener;
 
-    public OrderAdapter(Context context, List<Order> list) {
+    public OrderAdapter(Context context, List<Order> list, boolean isAdminMode, OrderActionListener listener) {
         this.context = context;
         this.list = list;
+        this.isAdminMode = isAdminMode;
+        this.listener = listener;
     }
 
     @Override
@@ -53,6 +64,40 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         bg.setCornerRadius(12f);
         bg.setColor(getStatusColor(status));
         holder.tvOrderStatus.setBackground(bg);
+
+        // Reset button visibility
+        holder.btnConfirm.setVisibility(View.GONE);
+        holder.btnCancel.setVisibility(View.GONE);
+        holder.layoutActions.setVisibility(View.GONE);
+
+        if (isAdminMode) {
+            // Admin: Pending -> show "Xác nhận" (to Shipping) + "Huỷ đơn"
+            if ("Pending".equals(status)) {
+                holder.layoutActions.setVisibility(View.VISIBLE);
+                holder.btnConfirm.setVisibility(View.VISIBLE);
+                holder.btnConfirm.setText("Xác nhận");
+                holder.btnCancel.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // User: Pending -> show "Huỷ đơn"
+            // User: Shipping -> show "Xác nhận nhận hàng" + "Huỷ đơn"
+            if ("Pending".equals(status)) {
+                holder.layoutActions.setVisibility(View.VISIBLE);
+                holder.btnCancel.setVisibility(View.VISIBLE);
+            } else if ("Shipping".equals(status)) {
+                holder.layoutActions.setVisibility(View.VISIBLE);
+                holder.btnConfirm.setVisibility(View.VISIBLE);
+                holder.btnConfirm.setText("Xác nhận nhận hàng");
+                holder.btnCancel.setVisibility(View.VISIBLE);
+            }
+        }
+
+        holder.btnConfirm.setOnClickListener(v -> {
+            if (listener != null) listener.onConfirm(order);
+        });
+        holder.btnCancel.setOnClickListener(v -> {
+            if (listener != null) listener.onCancel(order);
+        });
     }
 
     @Override
@@ -87,6 +132,8 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvOrderId, tvOrderStatus, tvReceiverName, tvPhone,
                 tvAddress, tvTotalAmount, tvPaymentMethod, tvCreatedAt;
+        Button btnConfirm, btnCancel;
+        LinearLayout layoutActions;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -98,6 +145,9 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvTotalAmount = itemView.findViewById(R.id.tvTotalAmount);
             tvPaymentMethod = itemView.findViewById(R.id.tvPaymentMethod);
             tvCreatedAt = itemView.findViewById(R.id.tvCreatedAt);
+            btnConfirm = itemView.findViewById(R.id.btnConfirm);
+            btnCancel = itemView.findViewById(R.id.btnCancel);
+            layoutActions = itemView.findViewById(R.id.layoutActions);
         }
     }
 }

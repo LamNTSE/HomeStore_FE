@@ -156,6 +156,11 @@ public class MainActivity extends AppCompatActivity
                     return true;
                 }
 
+                if (item.getItemId() == R.id.menuMyOrders) {
+                    startActivity(new Intent(MainActivity.this, UserOrdersActivity.class));
+                    return true;
+                }
+
                 if (item.getItemId() == R.id.menuLogout) {
 
                     SessionManager.clear(MainActivity.this);

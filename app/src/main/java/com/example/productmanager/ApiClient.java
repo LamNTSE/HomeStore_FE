@@ -1035,4 +1035,145 @@ public class ApiClient {
 
         getQueue(context).add(request);
     }
+
+    public static void getMyOrders(Context context,
+                                   String token,
+                                   DataCallback<List<Order>> callback) {
+
+        String url = ApiConfig.BASE_URL + "/orders";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải đơn hàng thất bại"));
+                        return;
+                    }
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Order> orders = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj == null) continue;
+
+                            orders.add(new Order(
+                                    obj.optInt("orderId"),
+                                    obj.optInt("userId"),
+                                    obj.optDouble("totalAmount", 0),
+                                    obj.optString("status"),
+                                    obj.optString("shippingAddress", null),
+                                    obj.optString("phone", null),
+                                    obj.optString("receiverName", null),
+                                    obj.optString("createdAt", ""),
+                                    obj.optString("paymentMethod", null),
+                                    obj.optString("paymentStatus", null)
+                            ));
+                        }
+                    }
+
+                    callback.onSuccess(orders, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void updateOrderStatus(Context context,
+                                         String token,
+                                         int orderId,
+                                         String status,
+                                         DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/orders/" + orderId + "/status?status=" + status;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                null,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Cập nhật trạng thái thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Cập nhật thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void cancelOrder(Context context,
+                                   String token,
+                                   int orderId,
+                                   DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/orders/" + orderId + "/cancel";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                null,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Huỷ đơn thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Đã huỷ đơn hàng"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void confirmDelivery(Context context,
+                                       String token,
+                                       int orderId,
+                                       DataCallback<Void> callback) {
+
+        String url = ApiConfig.BASE_URL + "/orders/" + orderId + "/confirm-delivery";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                null,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Xác nhận nhận hàng thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Đã xác nhận nhận hàng"));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
 }
