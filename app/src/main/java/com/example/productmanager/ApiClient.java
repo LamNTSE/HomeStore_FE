@@ -545,6 +545,51 @@ public class ApiClient {
         getQueue(context).add(request);
     }
 
+    public static void createOrder(Context context,
+                                   String token,
+                                   String shippingAddress,
+                                   String phone,
+                                   String receiverName,
+                                   String paymentMethod,
+                                   DataCallback<JSONObject> callback) {
+        String url = ApiConfig.BASE_URL + "/orders";
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("shippingAddress", shippingAddress);
+            body.put("phone", phone);
+            body.put("receiverName", receiverName);
+            body.put("paymentMethod", paymentMethod);
+        } catch (JSONException e) {
+            callback.onError("Du lieu tao don hang khong hop le");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Tao don hang that bai"));
+                        return;
+                    }
+
+                    JSONObject data = response.optJSONObject("data");
+                    if (data == null) {
+                        callback.onError("Khong nhan duoc thong tin don hang");
+                        return;
+                    }
+
+                    callback.onSuccess(data, response.optString("message", "Tao don hang thanh cong"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
     public static void updateCartQuantity(Context context,
                                           String token,
                                           int cartItemId,
@@ -926,6 +971,59 @@ public class ApiClient {
                     }
 
                     callback.onSuccess(vouchers, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getAllOrders(Context context,
+                                    String token,
+                                    DataCallback<List<Order>> callback) {
+
+        String url = ApiConfig.BASE_URL + "/orders";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải đơn hàng thất bại"));
+                        return;
+                    }
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Order> orders = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj == null) continue;
+
+                            orders.add(new Order(
+                                    obj.optInt("orderId"),
+                                    obj.optInt("userId"),
+                                    obj.optDouble("totalAmount", 0),
+                                    obj.optString("status"),
+                                    obj.optString("shippingAddress", null),
+                                    obj.optString("phone", null),
+                                    obj.optString("receiverName", null),
+                                    obj.optString("createdAt", ""),
+                                    obj.optString("paymentMethod", null),
+                                    obj.optString("paymentStatus", null)
+                            ));
+                        }
+                    }
+
+                    callback.onSuccess(orders, response.optString("message", ""));
                 },
                 error -> callback.onError(getErrorMessage(error))
         ) {

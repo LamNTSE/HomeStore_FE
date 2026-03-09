@@ -45,6 +45,14 @@
 
         <activity android:name=".VoucherDetailActivity"/>
 
+        <activity android:name=".ManageOrdersActivity"/>
+
+        <activity android:name=".OrderDetailActivity"/>
+
+        <activity android:name=".BillingSuccessActivity"/>
+
+        <activity android:name=".CheckoutActivity"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="false" />

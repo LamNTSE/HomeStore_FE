@@ -22,6 +22,7 @@ public class CartActivity extends AppCompatActivity
     private TextView tvEmptyCart, tvTotalPrice;
     private ListView lvCart;
     private Button btnClearCart;
+    private Button btnCheckout;
     private LinearLayout layoutFooter;
 
     private LinearLayout layoutVoucher;
@@ -61,6 +62,9 @@ public class CartActivity extends AppCompatActivity
 
         btnClearCart.setOnClickListener(v -> clearCart());
 
+        // CLICK thanh toán
+        btnCheckout.setOnClickListener(v -> openCheckout());
+
         // CLICK mở trang chọn voucher
         layoutVoucher.setOnClickListener(v -> openVoucherPage());
     }
@@ -78,6 +82,7 @@ public class CartActivity extends AppCompatActivity
 
         layoutVoucher = findViewById(R.id.layoutVoucher);
         tvVoucherCode = findViewById(R.id.tvVoucherCode);
+        btnCheckout = findViewById(R.id.btnCheckout);
     }
 
     // =========================
@@ -328,6 +333,24 @@ public class CartActivity extends AppCompatActivity
         if (finalTotal < 0) finalTotal = 0;
 
         tvTotalPrice.setText(formatVND(finalTotal));
+    }
+
+    // =========================
+    // CHECKOUT
+    // =========================
+    private void openCheckout() {
+        if (cartItems.isEmpty()) {
+            Toast.makeText(this, "Giỏ hàng đang trống!",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        double subtotal = calculateTotal();
+
+        Intent intent = new Intent(this, CheckoutActivity.class);
+        intent.putExtra("subtotal", subtotal);
+        intent.putExtra("discount", discountAmount);
+        startActivity(intent);
     }
 
     // =========================
