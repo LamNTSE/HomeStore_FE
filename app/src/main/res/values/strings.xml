@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ProductManager</string>
+
+    <!-- Google Web Client ID -->
+    <string name="default_web_client_id">
+      118445976312-0hlgo5maq5q0e0t72tog6jd9ocpp6mnp.apps.googleusercontent.com
+    </string>
+</resources>

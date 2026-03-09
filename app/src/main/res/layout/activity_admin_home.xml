@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Header -->
+        <TextView
+            android:text="👑 Admin Dashboard"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- Manage Products -->
+        <Button
+            android:id="@+id/btnManageProducts"
+            android:text="Quản lý sản phẩm"
+            android:layout_marginBottom="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
+        <!-- Manage Orders -->
+        <Button
+            android:id="@+id/btnManageOrders"
+            android:text="Quản lý đơn hàng"
+            android:layout_marginBottom="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
+        <!-- Manage Users -->
+        <Button
+            android:id="@+id/btnManageUsers"
+            android:text="Quản lý người dùng"
+            android:layout_marginBottom="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
+        <!-- Add Product -->
+        <Button
+            android:id="@+id/btnManageVouchers"
+            android:text="Quản lý Voucher"
+            android:layout_marginBottom="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
+        <!-- Logout -->
+        <Button
+            android:id="@+id/btnLogout"
+            android:text=" Đăng xuất"
+            android:backgroundTint="#FF4444"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
+    </LinearLayout>
+
+</ScrollView>
