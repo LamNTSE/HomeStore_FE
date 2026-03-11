@@ -13,26 +13,37 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> {
 
     public interface OrderActionListener {
         void onConfirm(Order order);
         void onCancel(Order order);
+        void onFeedbackClick(Order order);
     }
 
     private Context context;
     private List<Order> list;
     private boolean isAdminMode;
     private OrderActionListener listener;
+    // orderId -> true means order has at least one feedback
+    private Map<Integer, Boolean> feedbackStatus = new HashMap<>();
 
     public OrderAdapter(Context context, List<Order> list, boolean isAdminMode, OrderActionListener listener) {
         this.context = context;
         this.list = list;
         this.isAdminMode = isAdminMode;
         this.listener = listener;
+    }
+
+    public void updateFeedbackStatus(Map<Integer, Boolean> map) {
+        this.feedbackStatus.clear();
+        if (map != null) feedbackStatus.putAll(map);
+        notifyDataSetChanged();
     }
 
     @Override
@@ -98,6 +109,18 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         holder.btnCancel.setOnClickListener(v -> {
             if (listener != null) listener.onCancel(order);
         });
+
+        // Feedback link: only visible for non-admin, Delivered orders
+        if (!isAdminMode && "Delivered".equals(status)) {
+            holder.tvFeedbackLink.setVisibility(View.VISIBLE);
+            boolean hasFeedback = Boolean.TRUE.equals(feedbackStatus.get(order.getOrderId()));
+            holder.tvFeedbackLink.setText(hasFeedback ? "Xem đánh giá" : "Viết đánh giá");
+            holder.tvFeedbackLink.setOnClickListener(v -> {
+                if (listener != null) listener.onFeedbackClick(order);
+            });
+        } else {
+            holder.tvFeedbackLink.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -131,7 +154,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvOrderId, tvOrderStatus, tvReceiverName, tvPhone,
-                tvAddress, tvTotalAmount, tvPaymentMethod, tvCreatedAt;
+                tvAddress, tvTotalAmount, tvPaymentMethod, tvCreatedAt, tvFeedbackLink;
         Button btnConfirm, btnCancel;
         LinearLayout layoutActions;
 
@@ -148,6 +171,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             btnConfirm = itemView.findViewById(R.id.btnConfirm);
             btnCancel = itemView.findViewById(R.id.btnCancel);
             layoutActions = itemView.findViewById(R.id.layoutActions);
+            tvFeedbackLink = itemView.findViewById(R.id.tvFeedbackLink);
         }
     }
 }

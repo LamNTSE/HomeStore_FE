@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="4dp"
+    android:background="#FAFAFA"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- User + date row -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvFbPublicUser"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="#333"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvFbPublicDate"
+            android:textSize="12sp"
+            android:textColor="#999"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- Rating -->
+    <RatingBar
+        android:id="@+id/rbFbPublic"
+        style="@style/Widget.AppCompat.RatingBar.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:isIndicator="true"
+        android:numStars="5"
+        android:stepSize="1"
+        android:layout_marginTop="2dp" />
+
+    <!-- Comment -->
+    <TextView
+        android:id="@+id/tvFbPublicComment"
+        android:textSize="14sp"
+        android:textColor="#444"
+        android:layout_marginTop="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Admin reply block (hidden when null) -->
+    <LinearLayout
+        android:id="@+id/layoutFbPublicAdminReply"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:background="#E3F2FD"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="Phản hồi từ cửa hàng:"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:textColor="#1976D2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvFbPublicAdminReply"
+            android:textSize="13sp"
+            android:textColor="#333"
+            android:layout_marginTop="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:background="#DDDDDD"
+        android:layout_marginTop="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="1dp" />
+
+</LinearLayout>

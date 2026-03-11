@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@android:color/white"
+    android:layout_marginBottom="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Product image + name -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imgWriteFbProduct"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="centerCrop"
+            android:background="#EEEEEE"
+            android:contentDescription="Product image" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_marginStart="12dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvWriteFbProductName"
+                android:textStyle="bold"
+                android:textSize="15sp"
+                android:textColor="#222"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <!-- Rating -->
+            <RatingBar
+                android:id="@+id/rbWriteFbRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="1"
+                android:rating="5"
+                android:scaleX="0.7"
+                android:scaleY="0.7"
+                android:transformPivotX="0dp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Comment -->
+    <EditText
+        android:id="@+id/edtWriteFbComment"
+        android:hint="Nhận xét của bạn (tuỳ chọn)..."
+        android:minLines="2"
+        android:maxLines="4"
+        android:inputType="textMultiLine"
+        android:layout_marginTop="8dp"
+        android:textSize="14sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/edit_text" />
+
+    <!-- Admin reply (shown if already reviewed) -->
+    <LinearLayout
+        android:id="@+id/layoutAdminReply"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:background="#E3F2FD"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="Phản hồi của cửa hàng:"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:textColor="#1976D2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvAdminReplyText"
+            android:textSize="13sp"
+            android:textColor="#333"
+            android:layout_marginTop="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- Save button -->
+    <Button
+        android:id="@+id/btnSaveFeedback"
+        android:text="Lưu đánh giá"
+        android:backgroundTint="#FF5722"
+        android:textColor="@android:color/white"
+        android:textSize="13sp"
+        android:layout_gravity="end"
+        android:layout_marginTop="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp" />
+
+</LinearLayout>

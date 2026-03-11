@@ -51,6 +51,14 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"/>
 
+        <!-- Manage Feedbacks -->
+        <Button
+            android:id="@+id/btnManageFeedbacks"
+            android:text="Quản lý đánh giá"
+            android:layout_marginBottom="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
         <!-- Logout -->
         <Button
             android:id="@+id/btnLogout"

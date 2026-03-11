@@ -1176,4 +1176,226 @@ public class ApiClient {
 
         getQueue(context).add(request);
     }
+
+    // ============================================================
+    // FEEDBACK
+    // ============================================================
+
+    private static String optNullableString(JSONObject obj, String key) {
+        return obj.isNull(key) ? null : obj.optString(key, null);
+    }
+
+    private static Feedback parseFeedback(JSONObject obj) {
+        return new Feedback(
+                obj.optInt("feedbackId"),
+                obj.optInt("userId"),
+                obj.optString("userFullName", ""),
+                obj.optInt("productId"),
+                obj.optString("productName", ""),
+                obj.optInt("rating"),
+                optNullableString(obj, "comment"),
+                optNullableString(obj, "adminReply"),
+                optNullableString(obj, "adminReplyAt"),
+                obj.optString("createdAt", ""),
+                optNullableString(obj, "updatedAt")
+        );
+    }
+
+    public static void getAllFeedbacks(Context context, String token,
+                                       DataCallback<List<Feedback>> callback) {
+        String url = ApiConfig.BASE_URL + "/feedbacks";
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    JSONArray data = response.optJSONArray("data");
+                    List<Feedback> list = new ArrayList<>();
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj != null) list.add(parseFeedback(obj));
+                        }
+                    }
+                    callback.onSuccess(list, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void getMyFeedbacks(Context context, String token,
+                                       DataCallback<List<Feedback>> callback) {
+        String url = ApiConfig.BASE_URL + "/feedbacks/me";
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    JSONArray data = response.optJSONArray("data");
+                    List<Feedback> list = new ArrayList<>();
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj != null) list.add(parseFeedback(obj));
+                        }
+                    }
+                    callback.onSuccess(list, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void getFeedbacksByProduct(Context context, int productId,
+                                              DataCallback<List<Feedback>> callback) {
+        String url = ApiConfig.BASE_URL + "/feedbacks/product/" + productId;
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    JSONArray data = response.optJSONArray("data");
+                    List<Feedback> list = new ArrayList<>();
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj != null) list.add(parseFeedback(obj));
+                        }
+                    }
+                    callback.onSuccess(list, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader("");
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void createFeedback(Context context, String token,
+                                       int productId, int rating, String comment,
+                                       DataCallback<Feedback> callback) {
+        String url = ApiConfig.BASE_URL + "/feedbacks";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("productId", productId);
+            body.put("rating", rating);
+            body.put("comment", comment != null ? comment : JSONObject.NULL);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu đánh giá không hợp lệ");
+            return;
+        }
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Gửi đánh giá thất bại"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data != null ? parseFeedback(data) : null,
+                            response.optString("message", "Đã gửi đánh giá"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void updateFeedback(Context context, String token,
+                                       int feedbackId, int rating, String comment,
+                                       DataCallback<Feedback> callback) {
+        String url = ApiConfig.BASE_URL + "/feedbacks/" + feedbackId;
+        JSONObject body = new JSONObject();
+        try {
+            body.put("rating", rating);
+            body.put("comment", comment != null ? comment : JSONObject.NULL);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu đánh giá không hợp lệ");
+            return;
+        }
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Cập nhật đánh giá thất bại"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data != null ? parseFeedback(data) : null,
+                            response.optString("message", "Đã cập nhật đánh giá"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void adminReplyFeedback(Context context, String token,
+                                           int feedbackId, String reply,
+                                           DataCallback<Feedback> callback) {
+        String url = ApiConfig.BASE_URL + "/feedbacks/" + feedbackId + "/admin-reply";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("adminReply", reply);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu phản hồi không hợp lệ");
+            return;
+        }
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Lưu phản hồi thất bại"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data != null ? parseFeedback(data) : null,
+                            response.optString("message", "Đã lưu phản hồi"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void getOrderById(Context context, String token, int orderId,
+                                     DataCallback<List<OrderItem>> callback) {
+        String url = ApiConfig.BASE_URL + "/orders/" + orderId;
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    JSONObject data = response.optJSONObject("data");
+                    JSONArray items = data != null ? data.optJSONArray("items") : null;
+                    List<OrderItem> list = new ArrayList<>();
+                    if (items != null) {
+                        for (int i = 0; i < items.length(); i++) {
+                            JSONObject obj = items.optJSONObject(i);
+                            if (obj == null) continue;
+                            list.add(new OrderItem(
+                                    obj.optInt("orderItemId"),
+                                    obj.optInt("productId"),
+                                    obj.optString("productName", ""),
+                                    obj.optString("imageUrl", null),
+                                    obj.optInt("quantity", 1),
+                                    obj.optDouble("unitPrice", 0)
+                            ));
+                        }
+                    }
+                    callback.onSuccess(list, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
 }

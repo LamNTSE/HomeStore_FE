@@ -74,6 +74,41 @@
                     android:layout_marginTop="8dp"/>
             </LinearLayout>
 
+            <!-- Feedback Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@android:color/white"
+                android:layout_marginTop="8dp"
+                android:padding="16dp">
+
+                <TextView
+                    android:text="Đánh giá sản phẩm"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="#222"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/tvNoFeedbacks"
+                    android:text="Chưa có đánh giá nào"
+                    android:textSize="14sp"
+                    android:textColor="#888"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvFeedbacks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 

@@ -67,6 +67,10 @@
             android:name=".DetailActivity"
             android:exported="false" />
 
+        <activity android:name=".ManageFeedbacksActivity" android:exported="false" />
+
+        <activity android:name=".WriteFeedbackActivity" android:exported="false" />
+
     </application>
 
 </manifest>

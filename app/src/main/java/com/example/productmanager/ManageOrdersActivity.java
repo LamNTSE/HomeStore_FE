@@ -110,4 +110,9 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
                 .setNegativeButton("Không", null)
                 .show();
     }
+
+    @Override
+    public void onFeedbackClick(Order order) {
+        // Admin does not use feedback click
+    }
 }
