@@ -18,7 +18,7 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends BaseCustomerActivity {
 
     ImageView imgDetail;
     TextView tvName, tvPrice, tvDesc,tvOldPrice;

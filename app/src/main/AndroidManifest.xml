@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -26,7 +27,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 🔥 THÊM DÒNG NÀY -->
         <activity
             android:name=".RegisterActivity"
             android:exported="false" />
@@ -70,6 +70,10 @@
         <activity android:name=".ManageFeedbacksActivity" android:exported="false" />
 
         <activity android:name=".WriteFeedbackActivity" android:exported="false" />
+
+        <activity android:name=".ChatActivity" android:exported="false" />
+
+        <activity android:name=".AdminChatListActivity" android:exported="false" />
 
     </application>
 

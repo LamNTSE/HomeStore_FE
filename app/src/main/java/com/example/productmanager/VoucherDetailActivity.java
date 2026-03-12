@@ -15,7 +15,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-public class VoucherDetailActivity extends AppCompatActivity {
+public class VoucherDetailActivity extends BaseCustomerActivity {
 
     private TextView tvCode, tvTypeValue, tvValueValue, tvMinOrderValue,
             tvMaxUsageValue, tvStartValue, tvEndValue, tvStatus;

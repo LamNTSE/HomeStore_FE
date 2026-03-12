@@ -11,6 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +44,34 @@ public class ManageOrdersActivity extends AppCompatActivity implements OrderAdap
     protected void onResume() {
         super.onResume();
         loadOrders();
+
+        // Real-time: new order from any customer
+        String token = SessionManager.getToken(this);
+        SignalRManager.getInstance().connectOrders(token);
+        SignalRManager.getInstance().setNewOrderListener(orderJson -> {
+            // Reload full list so new order appears at correct position
+            loadOrders();
+        });
+        // Real-time: a customer cancelled or confirmed delivery
+        SignalRManager.getInstance().setOrderUpdateListener(orderJson -> {
+            try {
+                JSONObject updated = new JSONObject(orderJson);
+                int updatedId = updated.optInt("orderId", -1);
+                for (int i = 0; i < orderList.size(); i++) {
+                    if (orderList.get(i).getOrderId() == updatedId) {
+                        loadOrders();
+                        break;
+                    }
+                }
+            } catch (JSONException ignored) {}
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SignalRManager.getInstance().setNewOrderListener(null);
+        SignalRManager.getInstance().setOrderUpdateListener(null);
     }
 
     private void loadOrders() {

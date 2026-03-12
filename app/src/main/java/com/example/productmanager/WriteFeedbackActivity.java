@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class WriteFeedbackActivity extends AppCompatActivity {
+public class WriteFeedbackActivity extends BaseCustomerActivity {
 
     private TextView tvEmpty;
     private WriteFeedbackAdapter adapter;

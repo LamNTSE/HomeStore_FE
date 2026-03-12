@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint("UnsafeOptInUsageError")
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseCustomerActivity
         implements ProductAdapter.ProductActionListener {
 
     ListView lvProduct;
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity
             cartBadge.setVisible(false);
             cartBadge.setBackgroundColor(0xFFE53935);
             frameCart.post(() ->
-                BadgeUtils.attachBadgeDrawable(cartBadge, btnCartMain, frameCart)
+                    BadgeUtils.attachBadgeDrawable(cartBadge, btnCartMain, frameCart)
             );
         }
 
@@ -111,7 +111,8 @@ public class MainActivity extends AppCompatActivity
         // Search có delay
         edtSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -127,7 +128,8 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         // Popup menu avatar
@@ -325,5 +327,4 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
     }
-
 }

@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class BillingSuccessActivity extends AppCompatActivity {
+public class BillingSuccessActivity extends BaseCustomerActivity {
 
     @SuppressLint({"DefaultLocale", "SetTextI18n"})
     @Override

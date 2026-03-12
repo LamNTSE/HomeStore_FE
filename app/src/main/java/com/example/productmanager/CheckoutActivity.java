@@ -17,7 +17,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONObject;
 
-public class CheckoutActivity extends AppCompatActivity {
+public class CheckoutActivity extends BaseCustomerActivity {
 
     private TextInputEditText edtReceiverName, edtPhone, edtAddress;
     private RadioGroup rgPaymentMethod;
