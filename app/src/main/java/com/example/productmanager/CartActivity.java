@@ -1,5 +1,6 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -288,6 +289,7 @@ public class CartActivity extends AppCompatActivity
                 });
     }
 
+    @SuppressLint("DefaultLocale")
     private String formatVND(double amount) {
         return String.format("%,.0f ₫", amount);
     }

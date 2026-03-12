@@ -1,5 +1,6 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -157,6 +158,7 @@ public class CheckoutActivity extends AppCompatActivity {
         return edt.getText() == null ? "" : edt.getText().toString().trim();
     }
 
+    @SuppressLint("DefaultLocale")
     private String formatVND(double amount) {
         return String.format("%,.0f ₫", amount);
     }

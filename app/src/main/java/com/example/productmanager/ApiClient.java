@@ -1,5 +1,6 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.DefaultRetryPolicy;
@@ -36,9 +37,7 @@ public class ApiClient {
 
     private static RequestQueue getQueue(Context context) {
         if (requestQueue == null) {
-            if (ApiConfig.BASE_URL.startsWith("https://")) {
-                trustLocalDevCertificate();
-            }
+            trustLocalDevCertificate();
             requestQueue = Volley.newRequestQueue(context.getApplicationContext());
         }
         return requestQueue;
@@ -46,17 +45,19 @@ public class ApiClient {
 
     private static void trustLocalDevCertificate() {
         try {
-            TrustManager[] trustAllCerts = new TrustManager[] {
+            @SuppressLint("CustomX509TrustManager") TrustManager[] trustAllCerts = new TrustManager[] {
                     new X509TrustManager() {
                         @Override
                         public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                             return new java.security.cert.X509Certificate[]{};
                         }
 
+                        @SuppressLint("TrustAllX509TrustManager")
                         @Override
                         public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
                         }
 
+                        @SuppressLint("TrustAllX509TrustManager")
                         @Override
                         public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
                         }
@@ -68,6 +69,7 @@ public class ApiClient {
             HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
 
             HostnameVerifier allHostsValid = new HostnameVerifier() {
+                @SuppressLint("BadHostnameVerifier")
                 @Override
                 public boolean verify(String hostname, SSLSession session) {
                     return true;

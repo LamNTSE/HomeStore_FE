@@ -138,9 +138,10 @@ public class MainActivity extends AppCompatActivity
 
             // Ép hiện icon
             try {
-                Field field = popupMenu.getClass().getDeclaredField("mPopup");
+                @SuppressLint("DiscouragedPrivateApi") Field field = popupMenu.getClass().getDeclaredField("mPopup");
                 field.setAccessible(true);
                 Object menuPopupHelper = field.get(popupMenu);
+                assert menuPopupHelper != null;
                 Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
                 Method setForceIcons =
                         classPopupHelper.getMethod("setForceShowIcon", boolean.class);
@@ -324,4 +325,5 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
     }
+
 }

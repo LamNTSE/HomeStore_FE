@@ -1,5 +1,6 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -50,6 +51,7 @@ public class VoucherDetailActivity extends AppCompatActivity {
         loadVoucher();
     }
 
+    @SuppressLint("SetTextI18n")
     private void initViews() {
 
         View rowType = findViewById(R.id.rowType);
@@ -124,6 +126,7 @@ public class VoucherDetailActivity extends AppCompatActivity {
         );
     }
 
+    @SuppressLint("SetTextI18n")
     private void bindData(Voucher voucher) {
 
         NumberFormat format =
