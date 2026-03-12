@@ -41,7 +41,7 @@
                     android:layout_height="36dp"
                     android:layout_gravity="bottom|end"
                     android:src="@drawable/ic_camera"
-                    android:background="@drawable/bg_circle_button"
+                    android:background="@drawable/bg_circle_camera"
                     android:padding="6dp"
                     android:contentDescription="Đổi ảnh đại diện"
                     android:elevation="4dp" />

@@ -60,7 +60,7 @@ public class ChatActivity extends AppCompatActivity {
     private void setupToolbar() {
         String title = otherUserName != null ? otherUserName : "Chat";
         if (!isAdmin) {
-            title = "Chủ cửa hàng";
+            title = "Chat với cửa hàng";
         }
         toolbar.setTitle(title);
         toolbar.setNavigationOnClickListener(v -> finish());
