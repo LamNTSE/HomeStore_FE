@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VoucherActivity extends AppCompatActivity {
+public class VoucherActivity extends BaseCustomerActivity {
 
     private RecyclerView rvVoucher;
     private List<Voucher> voucherList;

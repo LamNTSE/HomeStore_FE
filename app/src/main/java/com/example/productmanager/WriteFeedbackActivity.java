@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class WriteFeedbackActivity extends AppCompatActivity {
+public class WriteFeedbackActivity extends BaseCustomerActivity {
 
     private RecyclerView rvWriteFeedback;
     private TextView tvEmpty;

@@ -12,12 +12,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class UserOrdersActivity extends AppCompatActivity implements OrderAdapter.OrderActionListener {
+public class UserOrdersActivity extends BaseCustomerActivity implements OrderAdapter.OrderActionListener {
 
     private RecyclerView rvOrders;
     private TextView tvEmpty;
@@ -44,6 +47,30 @@ public class UserOrdersActivity extends AppCompatActivity implements OrderAdapte
     protected void onResume() {
         super.onResume();
         loadOrders();
+
+        // Listen for real-time order status changes from admin
+        String token = SessionManager.getToken(this);
+        SignalRManager.getInstance().connectOrders(token);
+        SignalRManager.getInstance().setOrderUpdateListener(orderJson -> {
+            try {
+                JSONObject updated = new JSONObject(orderJson);
+                int updatedId = updated.optInt("orderId", -1);
+                String newStatus = updated.optString("status", "");
+                for (Order o : orderList) {
+                    if (o.getOrderId() == updatedId) {
+                        // Reload the full list to keep UI consistent
+                        loadOrders();
+                        break;
+                    }
+                }
+            } catch (JSONException ignored) {}
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SignalRManager.getInstance().setOrderUpdateListener(null);
     }
 
     private void loadOrders() {

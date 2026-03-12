@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CartActivity extends AppCompatActivity
+public class CartActivity extends BaseCustomerActivity
         implements CartAdapter.CartActionListener {
 
     private ImageView btnBackCart;

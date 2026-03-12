@@ -59,6 +59,14 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"/>
 
+        <!-- Chat -->
+        <Button
+            android:id="@+id/btnChat"
+            android:text="💬 Chat khách hàng"
+            android:layout_marginBottom="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
         <!-- Logout -->
         <Button
             android:id="@+id/btnLogout"

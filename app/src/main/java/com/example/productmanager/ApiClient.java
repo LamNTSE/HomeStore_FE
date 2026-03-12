@@ -1398,4 +1398,141 @@ public class ApiClient {
         };
         getQueue(context).add(request);
     }
+
+    // ===== CHAT API =====
+
+    public static void sendMessage(Context context, String token, int receiverId, String content,
+                                   DataCallback<JSONObject> callback) {
+        String url = ApiConfig.BASE_URL + "/Chat";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("receiverId", receiverId);
+            body.put("content", content);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu tin nhắn không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Gửi tin nhắn thất bại"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void getConversation(Context context, String token, int otherUserId,
+                                       DataCallback<JSONArray> callback) {
+        String url = ApiConfig.BASE_URL + "/Chat/conversation/" + otherUserId;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải cuộc trò chuyện thất bại"));
+                        return;
+                    }
+                    JSONArray data = response.optJSONArray("data");
+                    callback.onSuccess(data != null ? data : new JSONArray(),
+                            response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void getConversationPartners(Context context, String token,
+                                               DataCallback<JSONArray> callback) {
+        String url = ApiConfig.BASE_URL + "/Chat/partners";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải danh sách chat thất bại"));
+                        return;
+                    }
+                    JSONArray data = response.optJSONArray("data");
+                    callback.onSuccess(data != null ? data : new JSONArray(),
+                            response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    public static void getAdminUser(Context context, String token,
+                                    DataCallback<JSONObject> callback) {
+        String url = ApiConfig.BASE_URL + "/Chat/admin";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Không tìm thấy admin"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+        getQueue(context).add(request);
+    }
+
+    // ===== PROFILE UPDATE =====
+
+    public static void updateMyProfile(Context context, String token, String avatarUrl,
+                                       DataCallback<Void> callback) {
+        String url = ApiConfig.BASE_URL + "/Users/me";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("avatarUrl", avatarUrl);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Cập nhật thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Cập nhật thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                0,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+        getQueue(context).add(request);
+    }
 }

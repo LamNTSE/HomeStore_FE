@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint("UnsafeOptInUsageError")
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseCustomerActivity
         implements ProductAdapter.ProductActionListener {
 
     ListView lvProduct;
@@ -52,8 +52,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         lvProduct = findViewById(R.id.lvProduct);
-        fabAdd = findViewById(R.id.fabAdd);
-        edtSearch = findViewById(R.id.edtSearch);
+        fabAdd = findViewById(R.id.fabAdd);        edtSearch = findViewById(R.id.edtSearch);
         frameCart = findViewById(R.id.frameCart);
         btnCartMain = findViewById(R.id.btnCartMain);
         ImageView avatar = findViewById(R.id.btnAvatar);

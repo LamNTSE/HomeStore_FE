@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class BillingSuccessActivity extends AppCompatActivity {
+public class BillingSuccessActivity extends BaseCustomerActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
