@@ -18,16 +18,35 @@
             android:gravity="center"
             android:background="@drawable/bg_profile_header">
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/imgAvatar"
-                android:layout_width="110dp"
-                android:layout_height="110dp"
-                android:src="@drawable/ic_avatar"
-                android:scaleType="centerCrop"
-                android:contentDescription="Avatar"
-                android:background="@drawable/bg_avatar_border"
-                android:padding="4dp"
-                app:shapeAppearanceOverlay="@style/CircleImage" />
+            <!-- Avatar container with camera button overlay -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imgAvatar"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    android:src="@drawable/ic_avatar"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Avatar"
+                    android:background="@drawable/bg_avatar_border"
+                    android:padding="4dp"
+                    app:shapeAppearanceOverlay="@style/CircleImage" />
+
+                <!-- Camera button -->
+                <ImageView
+                    android:id="@+id/btnChangeAvatar"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/ic_camera"
+                    android:background="@drawable/bg_circle_camera"
+                    android:padding="6dp"
+                    android:contentDescription="Đổi ảnh đại diện"
+                    android:elevation="4dp" />
+
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/txtName"

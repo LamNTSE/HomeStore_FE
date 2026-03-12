@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class AdminHomeActivity extends AppCompatActivity {
 
-    Button btnManageProducts, btnManageOrders, btnManageUsers, btnAddProduct, btnLogout;
+    Button btnManageProducts, btnManageOrders, btnManageUsers, btnAddProduct, btnManageFeedbacks, btnLogout, btnChat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,6 +18,7 @@ public class AdminHomeActivity extends AppCompatActivity {
         btnManageOrders = findViewById(R.id.btnManageOrders);
         btnManageUsers = findViewById(R.id.btnManageUsers);
         btnAddProduct = findViewById(R.id.btnManageVouchers);
+        btnManageFeedbacks = findViewById(R.id.btnManageFeedbacks);
         btnLogout = findViewById(R.id.btnLogout);
 
         btnManageProducts.setOnClickListener(v ->
@@ -31,6 +32,13 @@ public class AdminHomeActivity extends AppCompatActivity {
 
         btnAddProduct.setOnClickListener(v ->
                 startActivity(new Intent(this, ManageVouchersActivity.class)));
+
+        btnManageFeedbacks.setOnClickListener(v ->
+                startActivity(new Intent(this, ManageFeedbacksActivity.class)));
+
+        btnChat = findViewById(R.id.btnChat);
+        btnChat.setOnClickListener(v ->
+                startActivity(new Intent(this, AdminChatListActivity.class)));
 
         btnLogout.setOnClickListener(v -> {
             SessionManager.clear(this);

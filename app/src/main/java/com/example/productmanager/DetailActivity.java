@@ -1,21 +1,34 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.graphics.Paint;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-public class DetailActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.List;
+
+public class DetailActivity extends BaseCustomerActivity {
 
     ImageView imgDetail;
-    TextView tvName, tvPrice, tvDesc;
+    TextView tvName, tvPrice, tvDesc,tvOldPrice;
+
+    TextView tvSeeMore;
     Button btnBack, btnEdit, btnAddToCart;
+    RecyclerView rvFeedbacks;
+    TextView tvNoFeedbacks;
+    FeedbackPublicAdapter feedbackAdapter;
+    List<Feedback> feedbackList = new ArrayList<>();
 
     private int productId;
     private Product currentProduct;
@@ -30,10 +43,21 @@ public class DetailActivity extends AppCompatActivity {
         imgDetail = findViewById(R.id.imgDetail);
         tvName = findViewById(R.id.tvDetailName);
         tvPrice = findViewById(R.id.tvDetailPrice);
+        tvOldPrice = findViewById(R.id.tvOldPrice);
+
+// gạch ngang giá cũ
+        tvOldPrice.setPaintFlags(tvOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
         tvDesc = findViewById(R.id.tvDetailDesc);
         btnBack = findViewById(R.id.btnBack);
         btnEdit = findViewById(R.id.btnEdit);
         btnAddToCart = findViewById(R.id.btnAddToCart);
+        rvFeedbacks = findViewById(R.id.rvFeedbacks);
+        tvNoFeedbacks = findViewById(R.id.tvNoFeedbacks);
+        tvSeeMore = findViewById(R.id.tvSeeMore);
+        feedbackAdapter = new FeedbackPublicAdapter(feedbackList);
+        rvFeedbacks.setLayoutManager(new LinearLayoutManager(this));
+        rvFeedbacks.setAdapter(feedbackAdapter);
+        rvFeedbacks.setNestedScrollingEnabled(false);
 
         authToken = SessionManager.getToken(this);
         if (authToken.isEmpty()) {
@@ -55,7 +79,7 @@ public class DetailActivity extends AppCompatActivity {
                 return;
             }
 
-            ApiClient.addToCart(this, authToken, currentProduct.getId(), 1, new ApiClient.DataCallback<Void>() {
+            ApiClient.addToCart(this, authToken, currentProduct.getId(), 1, new ApiClient.DataCallback<>() {
                 @Override
                 public void onSuccess(Void data, String message) {
                     Toast.makeText(DetailActivity.this,
@@ -93,6 +117,11 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("DefaultLocale")
+    private String formatVND(double amount) {
+        return String.format("%,.0f ₫", amount);
+    }
+
     private void loadProduct() {
         if (productId <= 0) {
             Toast.makeText(this, "Không có mã sản phẩm", Toast.LENGTH_SHORT).show();
@@ -100,13 +129,19 @@ public class DetailActivity extends AppCompatActivity {
             return;
         }
 
-        ApiClient.getProductById(this, authToken, productId, new ApiClient.DataCallback<Product>() {
+        ApiClient.getProductById(this, authToken, productId, new ApiClient.DataCallback<>() {
             @Override
             public void onSuccess(Product data, String message) {
                 currentProduct = data;
                 tvName.setText(data.getName());
                 tvDesc.setText(data.getDescription() == null ? "" : data.getDescription());
-                tvPrice.setText(String.format("%.2f USD", data.getPrice()));
+                double price = data.getPrice();
+                double discount = 0.2; // 20%
+
+                double oldPrice = price / (1 - discount);
+
+                tvPrice.setText(formatVND(price));
+                tvOldPrice.setText(formatVND(oldPrice));
 
                 if (data.getImageUrl() != null && !data.getImageUrl().isEmpty()) {
                     Glide.with(DetailActivity.this)
@@ -117,6 +152,8 @@ public class DetailActivity extends AppCompatActivity {
                 } else {
                     imgDetail.setImageResource(R.mipmap.ic_launcher);
                 }
+
+                loadFeedbacks();
             }
 
             @Override
@@ -124,6 +161,52 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                 finish();
             }
+        });
+    }
+
+    private void loadFeedbacks() {
+        ApiClient.getFeedbacksByProduct(this, productId, new ApiClient.DataCallback<>() {
+            @SuppressLint("NotifyDataSetChanged")
+            @Override
+            public void onSuccess(List<Feedback> data, String message) {
+
+                // Nếu không có feedback
+                if (data == null || data.isEmpty()) {
+                    tvNoFeedbacks.setVisibility(View.VISIBLE);
+                    rvFeedbacks.setVisibility(View.GONE);
+                    tvSeeMore.setVisibility(View.GONE);
+                    return;
+                }
+
+                tvNoFeedbacks.setVisibility(View.GONE);
+                rvFeedbacks.setVisibility(View.VISIBLE);
+
+                // ⭐ Hiện see more nếu > 2 feedback
+                if (data.size() > 2) {
+                    tvSeeMore.setVisibility(View.VISIBLE);
+
+                    // Chỉ show 2 cái đầu
+                    feedbackList.clear();
+                    feedbackList.add(data.get(0));
+                    feedbackList.add(data.get(1));
+                } else {
+                    tvSeeMore.setVisibility(View.GONE);
+                    feedbackList.clear();
+                    feedbackList.addAll(data);
+                }
+
+                feedbackAdapter.notifyDataSetChanged();
+
+                // ⭐ Chuyển sang màn hình Reviews
+                tvSeeMore.setOnClickListener(v -> {
+                    Intent intent = new Intent(DetailActivity.this, ReviewsActivity.class);
+                    intent.putExtra("PRODUCT_ID", productId);
+                    startActivity(intent);
+                });
+            }
+
+            @Override
+            public void onError(String error) {}
         });
     }
 }

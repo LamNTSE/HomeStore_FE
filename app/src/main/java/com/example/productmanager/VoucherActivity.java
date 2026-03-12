@@ -14,16 +14,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VoucherActivity extends AppCompatActivity {
+public class VoucherActivity extends BaseCustomerActivity {
 
-    private RecyclerView rvVoucher;
     private List<Voucher> voucherList;
     private VoucherAdapter adapter;
     private String token;
 
     // thêm mới
     private EditText edtVoucherCode;
-    private Button btnCheckVoucher;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -31,11 +29,11 @@ public class VoucherActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voucher);
 
-        rvVoucher = findViewById(R.id.rvVoucher);
+        RecyclerView rvVoucher = findViewById(R.id.rvVoucher);
 
         // thêm mới
         edtVoucherCode = findViewById(R.id.edtVoucherCode);
-        btnCheckVoucher = findViewById(R.id.btnCheckVoucher);
+        Button btnCheckVoucher = findViewById(R.id.btnCheckVoucher);
 
         // lấy token
         token = SessionManager.getToken(this);
@@ -86,6 +84,15 @@ public class VoucherActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Voucher voucher, String message) {
 
+                            if (!voucher.isActive()) {
+                                Toast.makeText(
+                                        VoucherActivity.this,
+                                        "Voucher đã hết hiệu lực",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                                return;
+                            }
+
                             Intent intent = new Intent();
                             intent.putExtra("voucherCode", voucher.getCode());
 
@@ -114,6 +121,7 @@ public class VoucherActivity extends AppCompatActivity {
                 token,
                 new ApiClient.DataCallback<List<Voucher>>() {
 
+                    @SuppressLint("NotifyDataSetChanged")
                     @Override
                     public void onSuccess(List<Voucher> data, String message) {
 

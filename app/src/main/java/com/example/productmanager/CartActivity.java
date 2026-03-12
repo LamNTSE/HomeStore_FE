@@ -1,5 +1,6 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -9,18 +10,20 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Intent;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CartActivity extends AppCompatActivity
+public class CartActivity extends BaseCustomerActivity
         implements CartAdapter.CartActionListener {
 
     private ImageView btnBackCart;
     private TextView tvEmptyCart, tvTotalPrice;
     private ListView lvCart;
     private Button btnClearCart;
+    private Button btnCheckout;
     private LinearLayout layoutFooter;
 
     private LinearLayout layoutVoucher;
@@ -60,6 +63,9 @@ public class CartActivity extends AppCompatActivity
 
         btnClearCart.setOnClickListener(v -> clearCart());
 
+        // CLICK thanh toán
+        btnCheckout.setOnClickListener(v -> openCheckout());
+
         // CLICK mở trang chọn voucher
         layoutVoucher.setOnClickListener(v -> openVoucherPage());
     }
@@ -77,6 +83,7 @@ public class CartActivity extends AppCompatActivity
 
         layoutVoucher = findViewById(R.id.layoutVoucher);
         tvVoucherCode = findViewById(R.id.tvVoucherCode);
+        btnCheckout = findViewById(R.id.btnCheckout);
     }
 
     // =========================
@@ -236,6 +243,17 @@ public class CartActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(Voucher voucher, String message) {
 
+                        if (!voucher.isActive()) {
+                            Toast.makeText(CartActivity.this,
+                                    "Voucher đã hết hiệu lực",
+                                    Toast.LENGTH_SHORT).show();
+                            appliedVoucher = null;
+                            discountAmount = 0;
+                            tvVoucherCode.setText("Chọn voucher");
+                            updateTotal();
+                            return;
+                        }
+
                         double total = calculateTotal();
 
                         if (total < voucher.getMinOrderValue()) {
@@ -271,6 +289,7 @@ public class CartActivity extends AppCompatActivity
                 });
     }
 
+    @SuppressLint("DefaultLocale")
     private String formatVND(double amount) {
         return String.format("%,.0f ₫", amount);
     }
@@ -319,6 +338,24 @@ public class CartActivity extends AppCompatActivity
     }
 
     // =========================
+    // CHECKOUT
+    // =========================
+    private void openCheckout() {
+        if (cartItems.isEmpty()) {
+            Toast.makeText(this, "Giỏ hàng đang trống!",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        double subtotal = calculateTotal();
+
+        Intent intent = new Intent(this, CheckoutActivity.class);
+        intent.putExtra("subtotal", subtotal);
+        intent.putExtra("discount", discountAmount);
+        startActivity(intent);
+    }
+
+    // =========================
     // CLEAR CART
     // =========================
     private void clearCart() {
@@ -329,6 +366,16 @@ public class CartActivity extends AppCompatActivity
                     Toast.LENGTH_SHORT).show();
             return;
         }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Xóa giỏ hàng")
+                .setMessage("Bạn có chắc muốn xóa toàn bộ sản phẩm trong giỏ hàng?")
+                .setPositiveButton("Xóa", (dialog, which) -> doClearCart())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void doClearCart() {
 
         ApiClient.clearCart(this, authToken,
                 new ApiClient.DataCallback<Void>() {

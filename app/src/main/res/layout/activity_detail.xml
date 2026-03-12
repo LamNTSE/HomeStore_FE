@@ -40,15 +40,32 @@
                     android:textStyle="bold"
                     android:textColor="#222" />
 
-                <TextView
-                    android:id="@+id/tvDetailPrice"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="100 USD"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="#FF5722"
-                    android:layout_marginTop="8dp"/>
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:id="@+id/tvDetailPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="100 USD"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF5722"/>
+
+                    <TextView
+                        android:id="@+id/tvOldPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="120 USD"
+                        android:textSize="16sp"
+                        android:textColor="#999999"
+                        android:layout_marginStart="10dp"
+                       />
+
+                </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
@@ -72,6 +89,51 @@
                     android:textSize="15sp"
                     android:textColor="#666"
                     android:layout_marginTop="8dp"/>
+            </LinearLayout>
+
+            <!-- Feedback Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@android:color/white"
+                android:layout_marginTop="8dp"
+                android:padding="16dp">
+
+                <TextView
+                    android:text="Đánh giá sản phẩm"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="#222"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/tvNoFeedbacks"
+                    android:text="Chưa có đánh giá nào"
+                    android:textSize="14sp"
+                    android:textColor="#888"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvFeedbacks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/tvSeeMore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="See more"
+                    android:textColor="#1976D2"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"/>
             </LinearLayout>
 
         </LinearLayout>

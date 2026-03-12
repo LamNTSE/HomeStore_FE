@@ -8,6 +8,12 @@
         app:iconTint="#3F51B5"/>
 
     <item
+        android:id="@+id/menuMyOrders"
+        android:title="Đơn hàng của tôi"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        app:iconTint="#FF9800"/>
+
+    <item
         android:id="@+id/menuLogout"
         android:title="Đăng xuất"
         android:icon="@drawable/ic_logout"

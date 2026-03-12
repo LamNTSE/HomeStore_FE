@@ -1,5 +1,6 @@
 package com.example.productmanager;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,6 +9,7 @@ import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
@@ -15,13 +17,17 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity
+@SuppressLint("UnsafeOptInUsageError")
+public class MainActivity extends BaseCustomerActivity
         implements ProductAdapter.ProductActionListener {
 
     ListView lvProduct;
@@ -31,6 +37,8 @@ public class MainActivity extends AppCompatActivity
     FloatingActionButton fabAdd;
     EditText edtSearch;
     ImageView btnCartMain;
+    FrameLayout frameCart;
+    BadgeDrawable cartBadge;
 
     String authToken;
     boolean isAdmin;
@@ -46,6 +54,7 @@ public class MainActivity extends AppCompatActivity
         lvProduct = findViewById(R.id.lvProduct);
         fabAdd = findViewById(R.id.fabAdd);
         edtSearch = findViewById(R.id.edtSearch);
+        frameCart = findViewById(R.id.frameCart);
         btnCartMain = findViewById(R.id.btnCartMain);
         ImageView avatar = findViewById(R.id.btnAvatar);
 
@@ -82,6 +91,17 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
         });
 
+        // Badge giỏ hàng
+        if (!isAdmin) {
+            cartBadge = BadgeDrawable.create(this);
+            cartBadge.setMaxCharacterCount(3);
+            cartBadge.setVisible(false);
+            cartBadge.setBackgroundColor(0xFFE53935);
+            frameCart.post(() ->
+                    BadgeUtils.attachBadgeDrawable(cartBadge, btnCartMain, frameCart)
+            );
+        }
+
         // Thêm sản phẩm (Admin)
         fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AddEditActivity.class);
@@ -91,7 +111,8 @@ public class MainActivity extends AppCompatActivity
         // Search có delay
         edtSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -107,7 +128,8 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         // Popup menu avatar
@@ -118,9 +140,10 @@ public class MainActivity extends AppCompatActivity
 
             // Ép hiện icon
             try {
-                Field field = popupMenu.getClass().getDeclaredField("mPopup");
+                @SuppressLint("DiscouragedPrivateApi") Field field = popupMenu.getClass().getDeclaredField("mPopup");
                 field.setAccessible(true);
                 Object menuPopupHelper = field.get(popupMenu);
+                assert menuPopupHelper != null;
                 Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
                 Method setForceIcons =
                         classPopupHelper.getMethod("setForceShowIcon", boolean.class);
@@ -133,6 +156,11 @@ public class MainActivity extends AppCompatActivity
 
                 if (item.getItemId() == R.id.menuProfile) {
                     startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                    return true;
+                }
+
+                if (item.getItemId() == R.id.menuMyOrders) {
+                    startActivity(new Intent(MainActivity.this, UserOrdersActivity.class));
                     return true;
                 }
 
@@ -194,6 +222,35 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         loadProducts(edtSearch.getText().toString().trim());
+        if (!isAdmin) {
+            updateCartBadge();
+        }
+    }
+
+    private void updateCartBadge() {
+        ApiClient.getCart(this, authToken,
+                new ApiClient.DataCallback<List<CartItem>>() {
+                    @Override
+                    public void onSuccess(List<CartItem> data, String message) {
+                        int count = 0;
+                        if (data != null) {
+                            for (CartItem item : data) {
+                                count += item.getQuantity();
+                            }
+                        }
+                        if (count > 0) {
+                            cartBadge.setVisible(true);
+                            cartBadge.setNumber(count);
+                        } else {
+                            cartBadge.setVisible(false);
+                        }
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        // Không hiện badge nếu lỗi
+                    }
+                });
     }
 
     // =============================
@@ -259,6 +316,7 @@ public class MainActivity extends AppCompatActivity
                                         ? "Đã thêm vào giỏ hàng"
                                         : message,
                                 Toast.LENGTH_SHORT).show();
+                        updateCartBadge();
                     }
 
                     @Override

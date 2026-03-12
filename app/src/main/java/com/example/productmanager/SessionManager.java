@@ -70,6 +70,34 @@ public class SessionManager {
         return "";
     }
 
+    public static int getUserId(Context context) {
+        String token = getToken(context);
+        if (token == null || token.trim().isEmpty()) return -1;
+
+        String[] parts = token.split("\\.");
+        if (parts.length < 2) return -1;
+
+        try {
+            byte[] decoded = Base64.decode(parts[1], Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+            String payload = new String(decoded, StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(payload);
+
+            // .NET uses "nameid" or the full claim URI for NameIdentifier
+            String[] idKeys = new String[] {
+                    "nameid",
+                    "sub",
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+            };
+            for (String key : idKeys) {
+                String val = json.optString(key, "");
+                if (!val.isEmpty()) {
+                    return Integer.parseInt(val);
+                }
+            }
+        } catch (Exception ignored) {}
+        return -1;
+    }
+
     public static void clear(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         prefs.edit().clear().apply();
