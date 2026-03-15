@@ -1,15 +1,18 @@
 package com.example.productmanager;
 
+import static com.example.productmanager.ApiConfig.BASE_URL;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
-import com.android.volley.toolbox.StringRequest;
+
+import com.android.volley.Response;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import java.nio.charset.StandardCharsets;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -108,7 +111,7 @@ public class ApiClient {
     }
 
     public static void login(Context context, String email, String password, DataCallback<String> callback) {
-        String url = ApiConfig.BASE_URL + "/auth/login";
+        String url = BASE_URL + "/auth/login";
         JSONObject body = new JSONObject();
         try {
             body.put("email", email);
@@ -159,7 +162,7 @@ public class ApiClient {
                                 String address,
                                 DataCallback<String> callback) {
 
-        String url = ApiConfig.BASE_URL + "/auth/register";
+        String url = BASE_URL + "/auth/register";
 
         JSONObject body = new JSONObject();
         try {
@@ -200,7 +203,7 @@ public class ApiClient {
                                    String idToken,
                                    DataCallback<String> callback) {
 
-        String url = ApiConfig.BASE_URL + "/auth/google-login";
+        String url = BASE_URL + "/auth/google-login";
 
         JSONObject body = new JSONObject();
         try {
@@ -248,7 +251,7 @@ public class ApiClient {
                                   String token,
                                   DataCallback<JSONObject> callback) {
 
-        String url = ApiConfig.BASE_URL + "/auth/profile";
+        String url = BASE_URL + "/auth/profile";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -272,9 +275,9 @@ public class ApiClient {
     }
 
     public static void getProducts(Context context, String token, String keyword, DataCallback<List<Product>> callback) {
-        String url = ApiConfig.BASE_URL + "/products";
+        String url = BASE_URL + "/products";
         if (keyword != null && !keyword.trim().isEmpty()) {
-            url = ApiConfig.BASE_URL + "/products/search?keyword=" + keyword.trim().replace(" ", "%20");
+            url = BASE_URL + "/products/search?keyword=" + keyword.trim().replace(" ", "%20");
         }
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -298,6 +301,9 @@ public class ApiClient {
                                     obj.optString("description"),
                                     obj.optDouble("price", 0),
                                     obj.optString("imageUrl", null)
+                                    ,obj.optInt("categoryId", 0)
+                                    ,obj.optInt("stockQuantity", 0)
+
                             ));
                         }
                     }
@@ -314,7 +320,7 @@ public class ApiClient {
     }
 
     public static void getProductById(Context context, String token, int productId, DataCallback<Product> callback) {
-        String url = ApiConfig.BASE_URL + "/products/" + productId;
+        String url = BASE_URL + "/products/" + productId;
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -333,6 +339,9 @@ public class ApiClient {
                             data.optString("description"),
                             data.optDouble("price", 0),
                             data.optString("imageUrl", null)
+                            ,data.optInt("categoryId", 0)
+                            ,data.optInt("stockQuantity", 0)
+
                     );
                     callback.onSuccess(product, response.optString("message", ""));
                 },
@@ -347,16 +356,16 @@ public class ApiClient {
     }
 
     public static void createProduct(Context context, String token, String name, String description,
-                                     double price, String imageUrl, DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/products";
+                                     double price, String imageUrl, int categoryId, int stockQuantity, DataCallback<Void> callback) {
+        String url = BASE_URL + "/products";
         JSONObject body = new JSONObject();
         try {
             body.put("productName", name);
             body.put("description", description);
             body.put("price", price);
-            body.put("stockQuantity", 10);
             body.put("imageUrl", imageUrl == null ? JSONObject.NULL : imageUrl);
-            body.put("categoryId", 1);
+            body.put("categoryId", categoryId);
+            body.put("stockQuantity", stockQuantity);
         } catch (JSONException e) {
             callback.onError("Dữ liệu sản phẩm không hợp lệ");
             return;
@@ -381,15 +390,18 @@ public class ApiClient {
     }
 
     public static void updateProduct(Context context, String token, int productId, String name,
-                                     String description, double price, String imageUrl,
+                                     String description, double price, String imageUrl, int categoryId, int stockQuantity,
                                      DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/products/" + productId;
+        String url = BASE_URL + "/products/" + productId;
         JSONObject body = new JSONObject();
         try {
             body.put("productName", name);
             body.put("description", description);
             body.put("price", price);
             body.put("imageUrl", imageUrl == null ? JSONObject.NULL : imageUrl);
+            body.put("categoryId", categoryId);
+            body.put("stockQuantity", stockQuantity);
+
         } catch (JSONException e) {
             callback.onError("Dữ liệu sản phẩm không hợp lệ");
             return;
@@ -414,7 +426,7 @@ public class ApiClient {
     }
 
     public static void deleteProduct(Context context, String token, int productId, DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/products/" + productId;
+        String url = BASE_URL + "/products/" + productId;
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
                 response -> {
@@ -435,7 +447,7 @@ public class ApiClient {
     }
 
     public static void getCart(Context context, String token, DataCallback<List<CartItem>> callback) {
-        String url = ApiConfig.BASE_URL + "/carts";
+        String url = BASE_URL + "/carts";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -477,7 +489,7 @@ public class ApiClient {
     }
 
     public static void addToCart(Context context, String token, int productId, int quantity, DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/carts/items";
+        String url = BASE_URL + "/carts/items";
         JSONObject body = new JSONObject();
         try {
             body.put("productId", productId);
@@ -506,7 +518,7 @@ public class ApiClient {
     }
 
     public static void removeCartItem(Context context, String token, int cartItemId, DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/carts/items/" + cartItemId;
+        String url = BASE_URL + "/carts/items/" + cartItemId;
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
                 response -> {
@@ -527,7 +539,7 @@ public class ApiClient {
     }
 
     public static void clearCart(Context context, String token, DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/carts";
+        String url = BASE_URL + "/carts";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
                 response -> {
@@ -553,36 +565,52 @@ public class ApiClient {
                                    String phone,
                                    String receiverName,
                                    String paymentMethod,
+                                   Integer voucherId,
                                    DataCallback<JSONObject> callback) {
-        String url = ApiConfig.BASE_URL + "/orders";
+
+        String url = BASE_URL + "/orders";
 
         JSONObject body = new JSONObject();
+
         try {
             body.put("shippingAddress", shippingAddress);
             body.put("phone", phone);
             body.put("receiverName", receiverName);
             body.put("paymentMethod", paymentMethod);
+
+            // ⭐ gửi voucherId nếu có
+            if (voucherId != null && voucherId > 0) {
+                body.put("voucherId", voucherId);
+            }
+
         } catch (JSONException e) {
-            callback.onError("Du lieu tao don hang khong hop le");
+            callback.onError("Dữ liệu tạo đơn hàng không hợp lệ");
             return;
         }
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                body,
                 response -> {
+
                     if (!response.optBoolean("success", false)) {
-                        callback.onError(response.optString("message", "Tao don hang that bai"));
+                        callback.onError(response.optString("message", "Tạo đơn hàng thất bại"));
                         return;
                     }
 
                     JSONObject data = response.optJSONObject("data");
+
                     if (data == null) {
-                        callback.onError("Khong nhan duoc thong tin don hang");
+                        callback.onError("Không nhận được dữ liệu đơn hàng");
                         return;
                     }
 
-                    callback.onSuccess(data, response.optString("message", "Tao don hang thanh cong"));
+                    callback.onSuccess(data,
+                            response.optString("message", "Tạo đơn hàng thành công"));
                 },
-                error -> callback.onError(getErrorMessage(error))) {
+                error -> callback.onError(getErrorMessage(error))
+        ) {
             @Override
             public Map<String, String> getHeaders() {
                 return buildAuthHeader(token);
@@ -598,7 +626,7 @@ public class ApiClient {
                                           int quantity,
                                           DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Carts/items/" + cartItemId;
+        String url = BASE_URL + "/Carts/items/" + cartItemId;
 
         JSONObject body = new JSONObject();
         try {
@@ -644,7 +672,7 @@ public class ApiClient {
                                    String token,
                                    DataCallback<List<Voucher>> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers";
+        String url = BASE_URL + "/Vouchers";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -698,7 +726,7 @@ public class ApiClient {
                                       int voucherId,
                                       DataCallback<Voucher> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers/" + voucherId;
+        String url = BASE_URL + "/Vouchers/" + voucherId;
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -747,7 +775,7 @@ public class ApiClient {
                                         String code,
                                         DataCallback<Voucher> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers/by-code/" + code;
+        String url = BASE_URL + "/Vouchers/by-code/" + code;
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -803,7 +831,7 @@ public class ApiClient {
                                      boolean isActive,
                                      DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers";
+        String url = BASE_URL + "/Vouchers";
 
         JSONObject body = new JSONObject();
         try {
@@ -858,7 +886,7 @@ public class ApiClient {
                                      boolean isActive,
                                      DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers/" + voucherId;
+        String url = BASE_URL + "/Vouchers/" + voucherId;
 
         JSONObject body = new JSONObject();
         try {
@@ -905,7 +933,7 @@ public class ApiClient {
                                      int voucherId,
                                      DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers/" + voucherId;
+        String url = BASE_URL + "/Vouchers/" + voucherId;
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.DELETE,
@@ -936,7 +964,7 @@ public class ApiClient {
                                             String token,
                                             DataCallback<List<Voucher>> callback) {
 
-        String url = ApiConfig.BASE_URL + "/Vouchers/available";
+        String url = BASE_URL + "/Vouchers/available";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -989,7 +1017,7 @@ public class ApiClient {
                                     String token,
                                     DataCallback<List<Order>> callback) {
 
-        String url = ApiConfig.BASE_URL + "/orders/all";
+        String url = BASE_URL + "/orders/all";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -1042,7 +1070,7 @@ public class ApiClient {
                                    String token,
                                    DataCallback<List<Order>> callback) {
 
-        String url = ApiConfig.BASE_URL + "/orders";
+        String url = BASE_URL + "/orders";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -1097,7 +1125,7 @@ public class ApiClient {
                                          String status,
                                          DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/orders/" + orderId + "/status?status=" + status;
+        String url = BASE_URL + "/orders/" + orderId + "/status?status=" + status;
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.PUT,
@@ -1126,7 +1154,7 @@ public class ApiClient {
                                    int orderId,
                                    DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/orders/" + orderId + "/cancel";
+        String url = BASE_URL + "/orders/" + orderId + "/cancel";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.PUT,
@@ -1155,7 +1183,7 @@ public class ApiClient {
                                        int orderId,
                                        DataCallback<Void> callback) {
 
-        String url = ApiConfig.BASE_URL + "/orders/" + orderId + "/confirm-delivery";
+        String url = BASE_URL + "/orders/" + orderId + "/confirm-delivery";
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.PUT,
@@ -1205,7 +1233,7 @@ public class ApiClient {
 
     public static void getAllFeedbacks(Context context, String token,
                                        DataCallback<List<Feedback>> callback) {
-        String url = ApiConfig.BASE_URL + "/feedbacks";
+        String url = BASE_URL + "/feedbacks";
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     JSONArray data = response.optJSONArray("data");
@@ -1229,7 +1257,7 @@ public class ApiClient {
 
     public static void getMyFeedbacks(Context context, String token,
                                        DataCallback<List<Feedback>> callback) {
-        String url = ApiConfig.BASE_URL + "/feedbacks/me";
+        String url = BASE_URL + "/feedbacks/me";
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     JSONArray data = response.optJSONArray("data");
@@ -1253,7 +1281,7 @@ public class ApiClient {
 
     public static void getFeedbacksByProduct(Context context, int productId,
                                               DataCallback<List<Feedback>> callback) {
-        String url = ApiConfig.BASE_URL + "/feedbacks/product/" + productId;
+        String url = BASE_URL + "/feedbacks/product/" + productId;
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     JSONArray data = response.optJSONArray("data");
@@ -1278,7 +1306,7 @@ public class ApiClient {
     public static void createFeedback(Context context, String token,
                                        int productId, int rating, String comment,
                                        DataCallback<Feedback> callback) {
-        String url = ApiConfig.BASE_URL + "/feedbacks";
+        String url = BASE_URL + "/feedbacks";
         JSONObject body = new JSONObject();
         try {
             body.put("productId", productId);
@@ -1310,7 +1338,7 @@ public class ApiClient {
     public static void updateFeedback(Context context, String token,
                                        int feedbackId, int rating, String comment,
                                        DataCallback<Feedback> callback) {
-        String url = ApiConfig.BASE_URL + "/feedbacks/" + feedbackId;
+        String url = BASE_URL + "/feedbacks/" + feedbackId;
         JSONObject body = new JSONObject();
         try {
             body.put("rating", rating);
@@ -1341,7 +1369,7 @@ public class ApiClient {
     public static void adminReplyFeedback(Context context, String token,
                                            int feedbackId, String reply,
                                            DataCallback<Feedback> callback) {
-        String url = ApiConfig.BASE_URL + "/feedbacks/" + feedbackId + "/admin-reply";
+        String url = BASE_URL + "/feedbacks/" + feedbackId + "/admin-reply";
         JSONObject body = new JSONObject();
         try {
             body.put("adminReply", reply);
@@ -1370,7 +1398,7 @@ public class ApiClient {
 
     public static void getOrderById(Context context, String token, int orderId,
                                      DataCallback<List<OrderItem>> callback) {
-        String url = ApiConfig.BASE_URL + "/orders/" + orderId;
+        String url = BASE_URL + "/orders/" + orderId;
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     JSONObject data = response.optJSONObject("data");
@@ -1405,7 +1433,7 @@ public class ApiClient {
 
     public static void sendMessage(Context context, String token, int receiverId, String content,
                                    DataCallback<JSONObject> callback) {
-        String url = ApiConfig.BASE_URL + "/Chat";
+        String url = BASE_URL + "/Chat";
         JSONObject body = new JSONObject();
         try {
             body.put("receiverId", receiverId);
@@ -1435,7 +1463,7 @@ public class ApiClient {
 
     public static void getConversation(Context context, String token, int otherUserId,
                                        DataCallback<JSONArray> callback) {
-        String url = ApiConfig.BASE_URL + "/Chat/conversation/" + otherUserId;
+        String url = BASE_URL + "/Chat/conversation/" + otherUserId;
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -1458,7 +1486,7 @@ public class ApiClient {
 
     public static void getConversationPartners(Context context, String token,
                                                DataCallback<JSONArray> callback) {
-        String url = ApiConfig.BASE_URL + "/Chat/partners";
+        String url = BASE_URL + "/Chat/partners";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -1481,7 +1509,7 @@ public class ApiClient {
 
     public static void getAdminUser(Context context, String token,
                                     DataCallback<JSONObject> callback) {
-        String url = ApiConfig.BASE_URL + "/Chat/admin";
+        String url = BASE_URL + "/Chat/admin";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -1505,7 +1533,7 @@ public class ApiClient {
 
     public static void updateMyProfile(Context context, String token, String avatarUrl,
                                        DataCallback<Void> callback) {
-        String url = ApiConfig.BASE_URL + "/Users/me";
+        String url = BASE_URL + "/Users/me";
         JSONObject body = new JSONObject();
         try {
             body.put("avatarUrl", avatarUrl);
@@ -1537,4 +1565,177 @@ public class ApiClient {
 
         getQueue(context).add(request);
     }
+
+    public static void getProductSold(Context context,
+                                      Response.Listener<JSONObject> listener,
+                                      Response.ErrorListener errorListener) {
+
+        String url = BASE_URL + "/products/sold";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                listener,
+                errorListener
+        );
+
+        Volley.newRequestQueue(context).add(request);
+    }
+
+    public static void createPayment(
+            Context context,
+            String token,
+            int orderId,
+            String paymentMethod,
+            DataCallback<JSONObject> callback
+    ) {
+
+        String url = BASE_URL + "/Payments";
+
+        try {
+
+            JSONObject body = new JSONObject();
+            body.put("orderId", orderId);
+            body.put("paymentMethod", paymentMethod);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    url,
+                    body,
+
+                    response -> {
+                        try {
+
+                            boolean success = response.getBoolean("success");
+                            String message = response.optString("message");
+
+                            if (!success) {
+                                callback.onError(message);
+                                return;
+                            }
+
+                            JSONObject data = response.optJSONObject("data");
+                            callback.onSuccess(data, message);
+
+                        } catch (Exception e) {
+                            callback.onError(e.getMessage());
+                        }
+                    },
+
+                    error -> callback.onError(error.toString())
+
+            ) {
+                @Override
+                public Map<String, String> getHeaders() {
+
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Authorization", "Bearer " + token);
+                    headers.put("Content-Type", "application/json");
+
+                    return headers;
+                }
+            };
+
+            Volley.newRequestQueue(context).add(request);
+
+        } catch (Exception e) {
+            callback.onError(e.getMessage());
+        }
+
+
+    }
+
+    public static void getCategories(Context context, String authToken, DataCallback<List<Category>> callback) {
+
+        String url = BASE_URL + "/products/categories";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Không tải được category"));
+                        return;
+                    }
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Category> list = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj == null) continue;
+
+                            list.add(new Category(
+                                    obj.optInt("categoryId"),
+                                    obj.optString("categoryName"),
+                                    obj.optString("description"),
+                                    obj.optString("imageUrl")
+                            ));
+                        }
+                    }
+
+                    callback.onSuccess(list, response.optString("message", ""));
+
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                String token = SessionManager.getToken(context);
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getProductsByCategory(Context context, String token, int categoryId, DataCallback<List<Product>> callback) {
+
+        String url = BASE_URL + "/products/category/" + categoryId;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Không tải được sản phẩm"));
+                        return;
+                    }
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Product> products = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject obj = data.optJSONObject(i);
+                            if (obj == null) continue;
+
+                            products.add(new Product(
+                                    obj.optInt("productId"),
+                                    obj.optString("productName"),
+                                    obj.optString("description"),
+                                    obj.optDouble("price", 0),
+                                    obj.optString("imageUrl", null),
+                                    obj.optInt("stockQuantity", 0),
+                                    obj.optInt("categoryId", 0)
+                            ));
+                        }
+                    }
+
+                    callback.onSuccess(products, response.optString("message", ""));
+
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
 }

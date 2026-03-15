@@ -10,8 +10,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Intent;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -26,8 +24,11 @@ public class CheckoutActivity extends BaseCustomerActivity {
     private Button btnPlaceOrder;
 
     private String authToken;
+
     private double subtotal;
     private double discount;
+
+    private Integer voucherId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +44,13 @@ public class CheckoutActivity extends BaseCustomerActivity {
             return;
         }
 
+        // nhận dữ liệu từ CartActivity
         subtotal = getIntent().getDoubleExtra("subtotal", 0);
         discount = getIntent().getDoubleExtra("discount", 0);
+
+        if (getIntent().hasExtra("voucherId")) {
+            voucherId = getIntent().getIntExtra("voucherId", 0);
+        }
 
         displaySummary();
         prefillShippingInfo();
@@ -56,11 +62,15 @@ public class CheckoutActivity extends BaseCustomerActivity {
         edtReceiverName = findViewById(R.id.edtReceiverName);
         edtPhone = findViewById(R.id.edtPhone);
         edtAddress = findViewById(R.id.edtAddress);
+
         rgPaymentMethod = findViewById(R.id.rgPaymentMethod);
+
         tvSubtotal = findViewById(R.id.tvSubtotal);
         tvDiscount = findViewById(R.id.tvDiscount);
         tvTotal = findViewById(R.id.tvTotal);
+
         layoutDiscount = findViewById(R.id.layoutDiscount);
+
         btnPlaceOrder = findViewById(R.id.btnPlaceOrder);
     }
 
@@ -71,91 +81,170 @@ public class CheckoutActivity extends BaseCustomerActivity {
     }
 
     private void prefillShippingInfo() {
+
         ApiClient.getProfile(this, authToken, new ApiClient.DataCallback<JSONObject>() {
+
             @Override
             public void onSuccess(JSONObject data, String message) {
+
                 if (data == null) return;
-                String fullName = data.optString("fullName", "");
-                String phone   = data.optString("phone", "");
-                String address = data.optString("address", "");
-                if (!fullName.isEmpty()) edtReceiverName.setText(fullName);
-                if (!phone.isEmpty())    edtPhone.setText(phone);
-                if (!address.isEmpty())  edtAddress.setText(address);
+
+                edtReceiverName.setText(data.optString("fullName", ""));
+                edtPhone.setText(data.optString("phone", ""));
+                edtAddress.setText(data.optString("address", ""));
             }
 
             @Override
             public void onError(String errorMessage) {
-                // không cần xử lý — user tự nhập nếu load thất bại
+                // user tự nhập
             }
         });
     }
 
     private void displaySummary() {
+
         tvSubtotal.setText(formatVND(subtotal));
 
         if (discount > 0) {
             layoutDiscount.setVisibility(View.VISIBLE);
             tvDiscount.setText("-" + formatVND(discount));
+        } else {
+            layoutDiscount.setVisibility(View.GONE);
         }
 
         double total = subtotal - discount;
         if (total < 0) total = 0;
+
         tvTotal.setText(formatVND(total));
     }
 
     private void placeOrder() {
+
         String name = getText(edtReceiverName);
         String phone = getText(edtPhone);
         String address = getText(edtAddress);
 
         if (name.isEmpty() || phone.isEmpty() || address.isEmpty()) {
-            Toast.makeText(this, "Vui lòng điền đầy đủ thông tin giao hàng",
+
+            Toast.makeText(this,
+                    "Vui lòng điền đầy đủ thông tin giao hàng",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String paymentMethod = rgPaymentMethod.getCheckedRadioButtonId() == R.id.rbCOD
-                ? "COD" : "VNPay";
+        String paymentMethod =
+                rgPaymentMethod.getCheckedRadioButtonId() == R.id.rbCOD
+                        ? "COD"
+                        : "VNPay";
 
         btnPlaceOrder.setEnabled(false);
         btnPlaceOrder.setText("Đang xử lý...");
 
-        ApiClient.createOrder(this, authToken,
-                address, phone, name, paymentMethod,
+        ApiClient.createOrder(
+                this,
+                authToken,
+                address,
+                phone,
+                name,
+                paymentMethod,
+                voucherId,
                 new ApiClient.DataCallback<JSONObject>() {
+
                     @Override
                     public void onSuccess(JSONObject data, String message) {
 
                         int orderId = data.optInt("orderId", 0);
-                        double totalAmount = data.optDouble("totalAmount", 0);
-                        String status = data.optString("status", "Pending");
+                        double finalTotal = data.optDouble("totalAmount", 0);
 
-                        Intent intent = new Intent(CheckoutActivity.this,
-                                BillingSuccessActivity.class);
-                        intent.putExtra("orderId", orderId);
-                        intent.putExtra("totalAmount", totalAmount);
-                        intent.putExtra("paymentMethod", paymentMethod);
-                        intent.putExtra("status", status);
+                        if (paymentMethod.equals("VNPay")) {
 
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-                                | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        finish();
+                            ApiClient.createPayment(
+                                    CheckoutActivity.this,
+                                    authToken,
+                                    orderId,
+                                    "VNPay",
+                                    new ApiClient.DataCallback<JSONObject>() {
+
+                                        @Override
+                                        public void onSuccess(JSONObject paymentData, String message) {
+
+                                            String paymentUrl = paymentData.optString("paymentUrl");
+
+                                            if (paymentUrl == null || paymentUrl.isEmpty()) {
+
+                                                Toast.makeText(
+                                                        CheckoutActivity.this,
+                                                        "Không lấy được link thanh toán",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+
+                                                btnPlaceOrder.setEnabled(true);
+                                                btnPlaceOrder.setText("Đặt hàng");
+                                                return;
+                                            }
+
+                                            Intent intent = new Intent(
+                                                    CheckoutActivity.this,
+                                                    VnpayWebViewActivity.class
+                                            );
+
+                                            intent.putExtra("paymentUrl", paymentUrl);
+                                            startActivity(intent);
+
+                                        }
+
+                                        @Override
+                                        public void onError(String errorMessage) {
+
+                                            btnPlaceOrder.setEnabled(true);
+                                            btnPlaceOrder.setText("Đặt hàng");
+
+                                            Toast.makeText(
+                                                    CheckoutActivity.this,
+                                                    errorMessage,
+                                                    Toast.LENGTH_SHORT
+                                            ).show();
+                                        }
+                                    }
+                            );
+
+                        } else {
+
+                            Intent intent = new Intent(
+                                    CheckoutActivity.this,
+                                    BillingSuccessActivity.class
+                            );
+
+                            intent.putExtra("orderId", orderId);
+                            intent.putExtra("totalAmount", finalTotal);
+                            intent.putExtra("paymentMethod", paymentMethod);
+                            intent.putExtra("status", "Pending");
+
+                            startActivity(intent);
+                            finish();
+                        }
                     }
 
                     @Override
                     public void onError(String errorMessage) {
+
                         btnPlaceOrder.setEnabled(true);
                         btnPlaceOrder.setText("Đặt hàng");
 
-                        Toast.makeText(CheckoutActivity.this,
-                                errorMessage, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(
+                                CheckoutActivity.this,
+                                errorMessage,
+                                Toast.LENGTH_SHORT
+                        ).show();
                     }
-                });
+                }
+        );
     }
 
     private String getText(TextInputEditText edt) {
-        return edt.getText() == null ? "" : edt.getText().toString().trim();
+        return edt.getText() == null
+                ? ""
+                : edt.getText().toString().trim();
     }
 
     @SuppressLint("DefaultLocale")

@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -51,9 +55,27 @@
 
         <activity android:name=".ReviewsActivity" />
 
-        <activity android:name=".BillingSuccessActivity"/>
+        <activity
+            android:name=".BillingSuccessActivity"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Deep link từ VNPay -->
+                <data
+                    android:scheme="myapp"
+                    android:host="payment-success" />
+            </intent-filter>
+
+        </activity>
 
         <activity android:name=".CheckoutActivity"/>
+
+        <activity android:name=".VnpayWebViewActivity"/>
 
         <activity
             android:name=".MainActivity"
@@ -65,6 +87,10 @@
 
         <activity
             android:name=".DetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ProductDetailManagementActivity"
             android:exported="false" />
 
         <activity android:name=".ManageFeedbacksActivity" android:exported="false" />

@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -14,8 +13,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.badge.BadgeUtils;
@@ -36,7 +33,10 @@ public class MainActivity extends BaseCustomerActivity
 
     FloatingActionButton fabAdd;
     EditText edtSearch;
+
     ImageView btnCartMain;
+    ImageView btnFilter;
+
     FrameLayout frameCart;
     BadgeDrawable cartBadge;
 
@@ -45,6 +45,13 @@ public class MainActivity extends BaseCustomerActivity
 
     Handler handler = new Handler();
     Runnable searchRunnable;
+
+    // =============================
+    // CATEGORY
+    // =============================
+
+    List<Category> categoryList = new ArrayList<>();
+    int selectedCategoryId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +63,15 @@ public class MainActivity extends BaseCustomerActivity
         edtSearch = findViewById(R.id.edtSearch);
         frameCart = findViewById(R.id.frameCart);
         btnCartMain = findViewById(R.id.btnCartMain);
+        btnFilter = findViewById(R.id.btnFilter);
         ImageView avatar = findViewById(R.id.btnAvatar);
 
-        // Lấy token
+        // =============================
+        // TOKEN
+        // =============================
+
         authToken = SessionManager.getToken(this);
+
         if (authToken.isEmpty()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
@@ -68,7 +80,12 @@ public class MainActivity extends BaseCustomerActivity
 
         isAdmin = SessionManager.isAdmin(this);
 
+        // =============================
+        // PRODUCT LIST
+        // =============================
+
         productList = new ArrayList<>();
+
         adapter = new ProductAdapter(
                 this,
                 R.layout.item_product,
@@ -79,40 +96,69 @@ public class MainActivity extends BaseCustomerActivity
 
         lvProduct.setAdapter(adapter);
 
-        // 👑 Phân quyền hiển thị
+        // =============================
+        // ROLE UI
+        // =============================
+
         fabAdd.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
         btnCartMain.setVisibility(isAdmin ? View.GONE : View.VISIBLE);
 
-        loadProducts("");
+        // =============================
+        // LOAD DATA
+        // =============================
 
-        // Giỏ hàng
+        loadProducts("");
+        loadCategories();
+
+        // =============================
+        // CART CLICK
+        // =============================
+
         btnCartMain.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, CartActivity.class);
             startActivity(intent);
         });
 
-        // Badge giỏ hàng
+        // =============================
+        // FILTER CLICK
+        // =============================
+
+        btnFilter.setOnClickListener(v -> showCategoryFilter(v));
+
+        // =============================
+        // CART BADGE
+        // =============================
+
         if (!isAdmin) {
+
             cartBadge = BadgeDrawable.create(this);
             cartBadge.setMaxCharacterCount(3);
             cartBadge.setVisible(false);
             cartBadge.setBackgroundColor(0xFFE53935);
+
             frameCart.post(() ->
                     BadgeUtils.attachBadgeDrawable(cartBadge, btnCartMain, frameCart)
             );
         }
 
-        // Thêm sản phẩm (Admin)
+        // =============================
+        // ADD PRODUCT (ADMIN)
+        // =============================
+
         fabAdd.setOnClickListener(v -> {
+
             Intent intent = new Intent(MainActivity.this, AddEditActivity.class);
             startActivity(intent);
         });
 
-        // Search có delay
+        // =============================
+        // SEARCH DELAY
+        // =============================
+
         edtSearch.addTextChangedListener(new TextWatcher() {
+
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -121,29 +167,35 @@ public class MainActivity extends BaseCustomerActivity
                     handler.removeCallbacks(searchRunnable);
                 }
 
-                searchRunnable = () ->
+                searchRunnable = () -> {
+
+                    if (selectedCategoryId == -1) {
                         loadProducts(s.toString().trim());
+                    } else {
+                        loadProductsByCategory(selectedCategoryId);
+                    }
+                };
 
                 handler.postDelayed(searchRunnable, 500);
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-            }
+            public void afterTextChanged(Editable s) {}
         });
 
-        // Popup menu avatar
+        // =============================
+        // AVATAR MENU
+        // =============================
+
         avatar.setOnClickListener(v -> {
 
             PopupMenu popupMenu = new PopupMenu(MainActivity.this, v);
             popupMenu.getMenuInflater().inflate(R.menu.menu_profile, popupMenu.getMenu());
 
-            // Ép hiện icon
             try {
-                @SuppressLint("DiscouragedPrivateApi") Field field = popupMenu.getClass().getDeclaredField("mPopup");
+                Field field = popupMenu.getClass().getDeclaredField("mPopup");
                 field.setAccessible(true);
                 Object menuPopupHelper = field.get(popupMenu);
-                assert menuPopupHelper != null;
                 Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
                 Method setForceIcons =
                         classPopupHelper.getMethod("setForceShowIcon", boolean.class);
@@ -186,13 +238,43 @@ public class MainActivity extends BaseCustomerActivity
     // =============================
     // LOAD PRODUCTS
     // =============================
+
     public void loadProducts(String keyword) {
 
         ApiClient.getProducts(this, authToken, keyword,
-                new ApiClient.DataCallback<java.util.List<Product>>() {
+                new ApiClient.DataCallback<List<Product>>() {
 
                     @Override
-                    public void onSuccess(java.util.List<Product> data, String message) {
+                    public void onSuccess(List<Product> data, String message) {
+
+                        productList.clear();
+                        productList.addAll(data);
+                        adapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Toast.makeText(MainActivity.this,
+                                errorMessage,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    // =============================
+    // LOAD PRODUCTS BY CATEGORY
+    // =============================
+
+    public void loadProductsByCategory(int categoryId) {
+
+        ApiClient.getProductsByCategory(this,
+                authToken,
+                categoryId,
+                new ApiClient.DataCallback<List<Product>>() {
+
+                    @Override
+                    public void onSuccess(List<Product> data, String message) {
+
                         productList.clear();
                         productList.addAll(data);
                         adapter.notifyDataSetChanged();
@@ -201,15 +283,34 @@ public class MainActivity extends BaseCustomerActivity
                     @Override
                     public void onError(String errorMessage) {
 
-                        if (errorMessage.contains("401")
-                                || errorMessage.contains("403")) {
+                        Toast.makeText(MainActivity.this,
+                                errorMessage,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
 
-                            SessionManager.clear(MainActivity.this);
-                            startActivity(new Intent(MainActivity.this,
-                                    LoginActivity.class));
-                            finish();
-                            return;
+    // =============================
+    // LOAD CATEGORY
+    // =============================
+
+    private void loadCategories() {
+
+        ApiClient.getCategories(this,
+                authToken, new ApiClient.DataCallback<List<Category>>() {
+
+                    @Override
+                    public void onSuccess(List<Category> data, String message) {
+
+                        categoryList.clear();
+
+                        if (data != null) {
+                            categoryList.addAll(data);
                         }
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
 
                         Toast.makeText(MainActivity.this,
                                 errorMessage,
@@ -218,44 +319,103 @@ public class MainActivity extends BaseCustomerActivity
                 });
     }
 
+    // =============================
+    // SHOW CATEGORY FILTER
+    // =============================
+
+    private void showCategoryFilter(View anchor) {
+
+        PopupMenu popup = new PopupMenu(this, anchor);
+
+        popup.getMenu().add("Tất cả");
+
+        for (Category c : categoryList) {
+            popup.getMenu().add(c.getCategoryName());
+        }
+
+        popup.setOnMenuItemClickListener(item -> {
+
+            String selected = item.getTitle().toString();
+
+            if (selected.equals("Tất cả")) {
+
+                selectedCategoryId = -1;
+                loadProducts(edtSearch.getText().toString().trim());
+                return true;
+            }
+
+            for (Category c : categoryList) {
+
+                if (c.getCategoryName().equals(selected)) {
+
+                    selectedCategoryId = c.getCategoryId();
+                    loadProductsByCategory(selectedCategoryId);
+                    break;
+                }
+            }
+
+            return true;
+        });
+
+        popup.show();
+    }
+
+    // =============================
+    // CART BADGE
+    // =============================
+
     @Override
     protected void onResume() {
         super.onResume();
+
         loadProducts(edtSearch.getText().toString().trim());
+
         if (!isAdmin) {
             updateCartBadge();
         }
     }
 
     private void updateCartBadge() {
+
         ApiClient.getCart(this, authToken,
                 new ApiClient.DataCallback<List<CartItem>>() {
+
                     @Override
                     public void onSuccess(List<CartItem> data, String message) {
+
                         int count = 0;
+
                         if (data != null) {
                             for (CartItem item : data) {
                                 count += item.getQuantity();
                             }
                         }
+
                         if (count > 0) {
+
                             cartBadge.setVisible(true);
                             cartBadge.setNumber(count);
+
                         } else {
+
                             cartBadge.setVisible(false);
                         }
                     }
 
                     @Override
-                    public void onError(String errorMessage) {
-                        // Không hiện badge nếu lỗi
-                    }
+                    public void onError(String errorMessage) {}
                 });
     }
 
     // =============================
-    // DELETE (Admin)
+    // DELETE PRODUCT
     // =============================
+
+    @Override
+    public void onProductClick(Product product) {
+
+    }
+
     @Override
     public void onDeleteProduct(Product product) {
 
@@ -272,10 +432,9 @@ public class MainActivity extends BaseCustomerActivity
 
                     @Override
                     public void onSuccess(Void data, String message) {
+
                         Toast.makeText(MainActivity.this,
-                                message.isEmpty()
-                                        ? "Đã xóa sản phẩm"
-                                        : message,
+                                "Đã xóa sản phẩm",
                                 Toast.LENGTH_SHORT).show();
 
                         loadProducts(edtSearch.getText().toString().trim());
@@ -283,6 +442,7 @@ public class MainActivity extends BaseCustomerActivity
 
                     @Override
                     public void onError(String errorMessage) {
+
                         Toast.makeText(MainActivity.this,
                                 errorMessage,
                                 Toast.LENGTH_SHORT).show();
@@ -291,15 +451,18 @@ public class MainActivity extends BaseCustomerActivity
     }
 
     // =============================
-    // ADD TO CART (Customer)
+    // ADD TO CART
     // =============================
+
     @Override
     public void onAddToCart(Product product) {
 
         if (isAdmin) {
+
             Toast.makeText(this,
                     "Admin không thể thêm vào giỏ hàng",
                     Toast.LENGTH_SHORT).show();
+
             return;
         }
 
@@ -311,16 +474,17 @@ public class MainActivity extends BaseCustomerActivity
 
                     @Override
                     public void onSuccess(Void data, String message) {
+
                         Toast.makeText(MainActivity.this,
-                                message.isEmpty()
-                                        ? "Đã thêm vào giỏ hàng"
-                                        : message,
+                                "Đã thêm vào giỏ hàng",
                                 Toast.LENGTH_SHORT).show();
+
                         updateCartBadge();
                     }
 
                     @Override
                     public void onError(String errorMessage) {
+
                         Toast.makeText(MainActivity.this,
                                 errorMessage,
                                 Toast.LENGTH_SHORT).show();

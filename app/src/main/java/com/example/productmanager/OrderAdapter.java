@@ -82,8 +82,8 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         holder.layoutActions.setVisibility(View.GONE);
 
         if (isAdminMode) {
-            // Admin: Pending -> show "Xác nhận" (to Shipping) + "Huỷ đơn"
-            if ("Pending".equals(status)) {
+            // Admin: Pending hoặc Confirmed -> có thể xác nhận Shipping hoặc hủy
+            if ("Pending".equals(status) || "Confirmed".equals(status)) {
                 holder.layoutActions.setVisibility(View.VISIBLE);
                 holder.btnConfirm.setVisibility(View.VISIBLE);
                 holder.btnConfirm.setText("Xác nhận");
@@ -92,7 +92,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         } else {
             // User: Pending -> show "Huỷ đơn"
             // User: Shipping -> show "Xác nhận nhận hàng" + "Huỷ đơn"
-            if ("Pending".equals(status)) {
+            if ("Pending".equals(status) || "Confirmed".equals(status)) {
                 holder.layoutActions.setVisibility(View.VISIBLE);
                 holder.btnCancel.setVisibility(View.VISIBLE);
             } else if ("Shipping".equals(status)) {

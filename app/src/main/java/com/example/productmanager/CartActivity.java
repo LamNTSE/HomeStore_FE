@@ -304,12 +304,12 @@ public class CartActivity extends BaseCustomerActivity
 
             if (total >= appliedVoucher.getMinOrderValue()) {
 
-                if ("FIXED".equalsIgnoreCase(appliedVoucher.getDiscountType())) {
+                String type = appliedVoucher.getDiscountType().toLowerCase();
 
+                if (type.equals("fixed")) {
                     discountAmount = appliedVoucher.getDiscountValue();
-
-                } else if ("PERCENT".equalsIgnoreCase(appliedVoucher.getDiscountType())) {
-
+                }
+                else if (type.equals("percent")) {
                     discountAmount = total * appliedVoucher.getDiscountValue() / 100;
                 }
 
@@ -341,6 +341,7 @@ public class CartActivity extends BaseCustomerActivity
     // CHECKOUT
     // =========================
     private void openCheckout() {
+
         if (cartItems.isEmpty()) {
             Toast.makeText(this, "Giỏ hàng đang trống!",
                     Toast.LENGTH_SHORT).show();
@@ -352,6 +353,11 @@ public class CartActivity extends BaseCustomerActivity
         Intent intent = new Intent(this, CheckoutActivity.class);
         intent.putExtra("subtotal", subtotal);
         intent.putExtra("discount", discountAmount);
+
+        if (appliedVoucher != null) {
+            intent.putExtra("voucherId", appliedVoucher.getVoucherId());
+        }
+
         startActivity(intent);
     }
 

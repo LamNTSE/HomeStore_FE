@@ -1,10 +1,15 @@
 package com.example.productmanager;
 
+import java.util.List;
+
 public class Order {
 
     private int orderId;
     private int userId;
+
     private double totalAmount;
+    private double discountAmount;
+
     private String status;
     private String shippingAddress;
     private String phone;
@@ -13,12 +18,18 @@ public class Order {
     private String paymentMethod;
     private String paymentStatus;
 
-    public Order(int orderId, int userId, double totalAmount, String status,
-                 String shippingAddress, String phone, String receiverName,
-                 String createdAt, String paymentMethod, String paymentStatus) {
+    // THÊM DÒNG NÀY
+    private List<OrderItem> orderItems;
+
+    public Order(int orderId, int userId, double totalAmount,
+                 String status, String shippingAddress, String phone,
+                 String receiverName, String createdAt,
+                 String paymentMethod, String paymentStatus) {
+
         this.orderId = orderId;
         this.userId = userId;
         this.totalAmount = totalAmount;
+        this.discountAmount = discountAmount;
         this.status = status;
         this.shippingAddress = shippingAddress;
         this.phone = phone;
@@ -31,6 +42,8 @@ public class Order {
     public int getOrderId() { return orderId; }
     public int getUserId() { return userId; }
     public double getTotalAmount() { return totalAmount; }
+    public double getDiscountAmount() { return discountAmount; }
+
     public String getStatus() { return status; }
     public String getShippingAddress() { return shippingAddress; }
     public String getPhone() { return phone; }
@@ -38,4 +51,9 @@ public class Order {
     public String getCreatedAt() { return createdAt; }
     public String getPaymentMethod() { return paymentMethod; }
     public String getPaymentStatus() { return paymentStatus; }
+
+    // THÊM GETTER
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
 }
