@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- HEADER -->
     <RelativeLayout
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
@@ -53,22 +54,46 @@
 
     </RelativeLayout>
 
-    <EditText
-        android:id="@+id/edtSearch"
+    <!-- SEARCH + FILTER -->
+    <LinearLayout
+        android:id="@+id/layoutSearch"
+        android:layout_below="@id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/layoutHeader"
-        android:hint="Tìm kiếm sản phẩm..."
-        android:drawableStart="@android:drawable/ic_menu_search"
-        android:padding="15dp"
-        android:background="#EEE"/>
+        android:orientation="horizontal"
+        android:padding="8dp">
 
+        <EditText
+            android:id="@+id/edtSearch"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="Tìm kiếm sản phẩm..."
+            android:drawableStart="@android:drawable/ic_menu_search"
+            android:padding="10dp"
+            android:background="#EEE"/>
+
+        <!-- FILTER ICON -->
+        <ImageView
+            android:id="@+id/btnFilter"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:padding="6dp"
+            android:background="#EEE"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            android:contentDescription="Filter"/>
+
+    </LinearLayout>
+
+    <!-- PRODUCT LIST -->
     <ListView
         android:id="@+id/lvProduct"
-        android:layout_below="@id/edtSearch"
+        android:layout_below="@id/layoutSearch"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <!-- ADD PRODUCT (ADMIN) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
@@ -78,6 +103,5 @@
         android:layout_margin="20dp"
         android:contentDescription="Add Product"
         android:src="@android:drawable/ic_input_add" />
-
 
 </RelativeLayout>

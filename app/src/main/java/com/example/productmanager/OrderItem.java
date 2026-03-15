@@ -1,6 +1,7 @@
 package com.example.productmanager;
 
 public class OrderItem {
+
     private int orderItemId;
     private int productId;
     private String productName;
@@ -18,10 +19,27 @@ public class OrderItem {
         this.unitPrice = unitPrice;
     }
 
-    public int getOrderItemId() { return orderItemId; }
-    public int getProductId() { return productId; }
-    public String getProductName() { return productName; }
-    public String getImageUrl() { return imageUrl; }
-    public int getQuantity() { return quantity; }
-    public double getUnitPrice() { return unitPrice; }
+    public int getOrderItemId() {
+        return orderItemId;
+    }
+
+    public int getProductId() {
+        return productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getUnitPrice() {
+        return unitPrice;
+    }
 }

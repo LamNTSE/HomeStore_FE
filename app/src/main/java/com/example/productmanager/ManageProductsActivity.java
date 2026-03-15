@@ -28,6 +28,7 @@ public class ManageProductsActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_products);
+
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -125,6 +126,22 @@ public class ManageProductsActivity extends AppCompatActivity
                         ).show();
                     }
                 });
+    }
+
+    // =============================
+    // CLICK PRODUCT → VIEW DETAIL
+    // =============================
+    @Override
+    public void onProductClick(Product product) {
+
+        Intent intent = new Intent(
+                ManageProductsActivity.this,
+                ProductDetailManagementActivity.class
+        );
+
+        intent.putExtra("productId", product.getId());
+
+        startActivity(intent);
     }
 
     // =============================

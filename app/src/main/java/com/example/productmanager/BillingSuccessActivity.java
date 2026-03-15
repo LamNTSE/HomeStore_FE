@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Objects;
+
 public class BillingSuccessActivity extends BaseCustomerActivity {
 
     @SuppressLint({"DefaultLocale", "SetTextI18n"})
@@ -22,10 +24,27 @@ public class BillingSuccessActivity extends BaseCustomerActivity {
         TextView tvStatus = findViewById(R.id.tvStatus);
         Button btnBackHome = findViewById(R.id.btnBackHome);
 
-        int orderId = getIntent().getIntExtra("orderId", 0);
-        double totalAmount = getIntent().getDoubleExtra("totalAmount", 0);
-        String paymentMethod = getIntent().getStringExtra("paymentMethod");
-        String status = getIntent().getStringExtra("status");
+        android.net.Uri data = getIntent().getData();
+
+        int orderId = 0;
+        double totalAmount = 0;
+        String paymentMethod = "COD";
+        String status = "Pending";
+
+        if (data != null) {
+            try {
+                orderId = Integer.parseInt(Objects.requireNonNull(data.getQueryParameter("orderId")));
+                totalAmount = Double.parseDouble(Objects.requireNonNull(data.getQueryParameter("amount")));
+                paymentMethod = data.getQueryParameter("method");
+                status = data.getQueryParameter("status");
+            } catch (Exception ignored) {}
+        } else {
+            // trường hợp COD (đi từ CheckoutActivity)
+            orderId = getIntent().getIntExtra("orderId", 0);
+            totalAmount = getIntent().getDoubleExtra("totalAmount", 0);
+            paymentMethod = getIntent().getStringExtra("paymentMethod");
+            status = getIntent().getStringExtra("status");
+        }
 
         tvOrderId.setText("#" + orderId);
         tvTotalAmount.setText(String.format("%,.0f ₫", totalAmount));

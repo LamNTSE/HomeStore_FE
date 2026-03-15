@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#F4F6F9">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -20,9 +20,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@android:color/white"
+                android:background="@drawable/bg_card"
                 android:padding="20dp"
-                android:elevation="4dp">
+                android:elevation="6dp">
 
                 <!-- Title -->
                 <TextView
@@ -32,8 +32,8 @@
                     android:text="THÔNG TIN SẢN PHẨM"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="#222"
-                    android:layout_marginBottom="20dp"/>
+                    android:textColor="#222222"
+                    android:layout_marginBottom="18dp"/>
 
                 <!-- Image Preview -->
                 <ImageView
@@ -42,21 +42,24 @@
                     android:layout_height="220dp"
                     android:scaleType="centerCrop"
                     android:src="@mipmap/ic_launcher"
-                    android:background="#EEEEEE"/>
+                    android:background="@drawable/bg_image"
+                    android:layout_marginBottom="8dp"/>
 
                 <Button
                     android:id="@+id/btnUpload"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Chọn ảnh sản phẩm"
-                    android:layout_marginTop="10dp"/>
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#2196F3"
+                    android:layout_marginTop="6dp"/>
 
                 <!-- Divider -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#EEEEEE"
-                    android:layout_marginVertical="20dp"/>
+                    android:background="#E5E5E5"
+                    android:layout_marginVertical="18dp"/>
 
                 <!-- Product Name -->
                 <EditText
@@ -65,19 +68,51 @@
                     android:layout_height="wrap_content"
                     android:hint="Tên sản phẩm"
                     android:padding="12dp"
-                    android:background="@android:drawable/edit_text"
-                    android:layout_marginBottom="15dp"/>
+                    android:background="@drawable/bg_input"
+                    android:layout_marginBottom="14dp"/>
 
                 <!-- Price -->
                 <EditText
                     android:id="@+id/edtPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Giá (USD)"
+                    android:hint="Giá (VND)"
                     android:inputType="numberDecimal"
                     android:padding="12dp"
-                    android:background="@android:drawable/edit_text"
-                    android:layout_marginBottom="15dp"/>
+                    android:background="@drawable/bg_input"
+                    android:layout_marginBottom="14dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Category"
+                    android:textStyle="bold"
+                    android:textColor="#444"
+                    android:layout_marginBottom="4dp"/>
+
+                <Spinner
+                    android:id="@+id/spCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_input"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Stock Quantity"
+                    android:textStyle="bold"
+                    android:textColor="#444"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="4dp"/>
+
+                <EditText
+                    android:id="@+id/edtStock"
+                    android:layout_width="match_parent"
+                    android:hint="Số Lượng tồn kho"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:padding="12dp"
+                    android:background="@drawable/bg_input"/>
 
                 <!-- Description -->
                 <EditText
@@ -88,7 +123,8 @@
                     android:minLines="4"
                     android:gravity="top"
                     android:padding="12dp"
-                    android:background="@android:drawable/edit_text"/>
+                    android:background="@drawable/bg_input"
+                    android:layout_marginTop="14dp"/>
 
             </LinearLayout>
 
@@ -102,29 +138,29 @@
         android:layout_height="70dp"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:padding="10dp"
-        android:background="@android:color/white"
-        android:elevation="8dp">
+        android:padding="12dp"
+        android:background="#FFFFFF"
+        android:elevation="10dp">
 
         <Button
             android:id="@+id/btnSave"
-            android:layout_width="0dp"
+            android:layout_width="48dp"
             android:layout_height="match_parent"
             android:layout_weight="2"
             android:text="LƯU SẢN PHẨM"
-            android:textColor="#FFF"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
-            android:backgroundTint="#FF5722"/>
+            android:backgroundTint="#FF6A00"/>
 
         <Button
             android:id="@+id/btnCancel"
-            android:layout_width="0dp"
+            android:layout_width="48dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="HỦY"
             android:layout_marginStart="10dp"
-            android:backgroundTint="#F44336"
-            android:textColor="#FFF"/>
+            android:backgroundTint="#9E9E9E"
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 
 </RelativeLayout>

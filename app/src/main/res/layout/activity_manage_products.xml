@@ -38,6 +38,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:contentDescription="Thêm sản phẩm"
         android:src="@android:drawable/ic_input_add"
         app:backgroundTint="@color/purple_500"
         app:layout_anchor="@id/listViewProducts"

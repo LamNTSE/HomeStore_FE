@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,10 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +28,11 @@ import java.util.Map;
 public class ProductAdapter extends BaseAdapter {
 
     public interface ProductActionListener {
+        // =============================
+        // CLICK PRODUCT → VIEW DETAIL
+        // =============================
+        void onProductClick(Product product);
+
         void onDeleteProduct(Product product);
         void onAddToCart(Product product);
     }
@@ -47,11 +57,17 @@ public class ProductAdapter extends BaseAdapter {
                           List<Product> productList,
                           ProductActionListener listener,
                           boolean isAdmin) {
+
         this.context = context;
         this.layout = layout;
         this.productList = productList;
         this.listener = listener;
         this.isAdmin = isAdmin;
+
+        // Load sold 1 lần khi adapter khởi tạo
+        if (!isAdmin) {
+            loadSold();
+        }
     }
 
     @Override
@@ -123,16 +139,18 @@ public class ProductAdapter extends BaseAdapter {
 
             int productId = product.getId();
 
+            // Rating
             if (ratingCache.containsKey(productId)) {
                 holder.txtRating.setText("⭐ " + ratingCache.get(productId));
             } else {
                 loadRating(productId, holder.txtRating);
             }
 
+            // Sold
             if (soldCache.containsKey(productId)) {
                 holder.txtSold.setText(" | Đã bán " + soldCache.get(productId));
             } else {
-                loadSold(productId, holder.txtSold);
+                holder.txtSold.setText(" | Đã bán 0");
             }
         }
 
@@ -152,8 +170,15 @@ public class ProductAdapter extends BaseAdapter {
             if (holder.layoutRating != null)
                 holder.layoutRating.setVisibility(View.GONE);
 
-            holder.imgProduct.setOnClickListener(null);
-            holder.layoutInfo.setOnClickListener(null);
+            // CLICK CARD → VIEW DETAIL
+            View.OnClickListener showDetail = v -> {
+                if (listener != null) {
+                    listener.onProductClick(product);
+                }
+            };
+
+            holder.imgProduct.setOnClickListener(showDetail);
+            holder.layoutInfo.setOnClickListener(showDetail);
 
             holder.btnEdit.setOnClickListener(v -> {
                 Intent intent = new Intent(context, AddEditActivity.class);
@@ -162,6 +187,7 @@ public class ProductAdapter extends BaseAdapter {
             });
 
             holder.btnDelete.setOnClickListener(v -> {
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle("Xác nhận xóa");
                 builder.setMessage("Bạn có chắc muốn xóa " + product.getName() + "?");
@@ -255,60 +281,38 @@ public class ProductAdapter extends BaseAdapter {
     // LOAD SOLD
     // =============================
 
-    private void loadSold(int productId, TextView txtSold) {
+    private void loadSold() {
 
-        String token = SessionManager.getToken(context);
+        ApiClient.getProductSold(context,
+                response -> {
 
-        txtSold.setText(" | Đã bán 0");
+                    try {
 
-        ApiClient.getMyOrders(context, token,
-                new ApiClient.DataCallback<List<Order>>() {
+                        JSONArray data = response.getJSONArray("data");
 
-                    @Override
-                    public void onSuccess(List<Order> orders, String message) {
+                        for (int i = 0; i < data.length(); i++) {
 
-                        if (orders == null || orders.isEmpty()) return;
+                            JSONObject obj = data.getJSONObject(i);
 
-                        final int[] sold = {0};
+                            int productId = obj.getInt("productId");
+                            int sold = obj.getInt("sold");
 
-                        for (Order order : orders) {
+                            soldCache.put(productId, sold);
 
-                            // 🔥 Chỉ tính đơn đã giao thành công
-                            if (!"Delivered".equalsIgnoreCase(order.getStatus())) {
-                                continue;
-                            }
-
-                            ApiClient.getOrderById(context,
-                                    token,
-                                    order.getOrderId(),
-                                    new ApiClient.DataCallback<List<OrderItem>>() {
-
-                                        @SuppressLint("SetTextI18n")
-                                        @Override
-                                        public void onSuccess(List<OrderItem> items, String msg) {
-
-                                            if (items == null) return;
-
-                                            for (OrderItem item : items) {
-
-                                                if (item.getProductId() == productId) {
-                                                    sold[0] += item.getQuantity();
-                                                }
-                                            }
-
-                                            soldCache.put(productId, sold[0]);
-                                            txtSold.setText(" | Đã bán " + sold[0]);
-                                        }
-
-                                        @Override
-                                        public void onError(String errorMessage) { }
-                                    });
+                            Log.d("SOLD", productId + " - " + sold);
                         }
+
+                        notifyDataSetChanged();
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
 
-                    @Override
-                    public void onError(String errorMessage) { }
-                });
+                },
+                error -> {
+                    error.printStackTrace();
+                }
+        );
     }
 
     private static class ViewHolder {
