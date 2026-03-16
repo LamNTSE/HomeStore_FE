@@ -1433,7 +1433,7 @@ public class ApiClient {
 
     public static void sendMessage(Context context, String token, int receiverId, String content,
                                    DataCallback<JSONObject> callback) {
-        String url = BASE_URL + "/Chat";
+        String url = BASE_URL + "/Chat/messages";
         JSONObject body = new JSONObject();
         try {
             body.put("receiverId", receiverId);
@@ -1461,9 +1461,9 @@ public class ApiClient {
         getQueue(context).add(request);
     }
 
-    public static void getConversation(Context context, String token, int otherUserId,
-                                       DataCallback<JSONArray> callback) {
-        String url = BASE_URL + "/Chat/conversation/" + otherUserId;
+    public static void getConversationMessages(Context context, String token, int otherUserId,
+                                               DataCallback<JSONArray> callback) {
+        String url = BASE_URL + "/Chat/conversations/" + otherUserId + "/messages";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -1484,9 +1484,33 @@ public class ApiClient {
         getQueue(context).add(request);
     }
 
-    public static void getConversationPartners(Context context, String token,
-                                               DataCallback<JSONArray> callback) {
-        String url = BASE_URL + "/Chat/partners";
+    public static void getUnreadMessages(Context context, String token,
+                                         DataCallback<JSONArray> callback) {
+        String url = BASE_URL + "/Chat/messages/unread";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải tin nhắn thất bại"));
+                        return;
+                    }
+                    JSONArray data = response.optJSONArray("data");
+                    callback.onSuccess(data != null ? data : new JSONArray(),
+                            response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return buildAuthHeader(token);
+            }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getConversations(Context context, String token,
+                                        DataCallback<JSONArray> callback) {
+        String url = BASE_URL + "/Chat/conversations";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -1733,6 +1757,167 @@ public class ApiClient {
             public Map<String, String> getHeaders() {
                 return buildAuthHeader(token);
             }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    // ── USER MANAGEMENT (Admin) ─────────────────────────────────────────────
+
+    public static void getUsers(Context context, String token, DataCallback<JSONArray> callback) {
+        String url = BASE_URL + "/users";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải danh sách user thất bại"));
+                        return;
+                    }
+                    JSONArray data = response.optJSONArray("data");
+                    callback.onSuccess(data != null ? data : new JSONArray(), response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void getUserById(Context context, String token, int userId, DataCallback<JSONObject> callback) {
+        String url = BASE_URL + "/users/" + userId;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Không tìm thấy user"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data, response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void createUser(Context context, String token, JSONObject body, DataCallback<JSONObject> callback) {
+        String url = BASE_URL + "/users";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Tạo user thất bại"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data, response.optString("message", "Tạo user thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void updateUser(Context context, String token, int userId, JSONObject body, DataCallback<Void> callback) {
+        String url = BASE_URL + "/users/" + userId;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Cập nhật user thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Cập nhật user thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void deleteUser(Context context, String token, int userId, DataCallback<Void> callback) {
+        String url = BASE_URL + "/users/" + userId;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Xóa user thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Xóa user thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    // ── STORE LOCATION ──────────────────────────────────────────────────────
+
+    public static void getStoreLocations(Context context, String token, DataCallback<JSONArray> callback) {
+        String url = BASE_URL + "/store";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    if (!response.optBoolean("success", true)) {
+                        callback.onError(response.optString("message", "Tải vị trí cửa hàng thất bại"));
+                        return;
+                    }
+                    JSONArray data = response.optJSONArray("data");
+                    callback.onSuccess(data != null ? data : new JSONArray(), response.optString("message", ""));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void createStoreLocation(Context context, String token, JSONObject body, DataCallback<JSONObject> callback) {
+        String url = BASE_URL + "/store";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Tạo vị trí cửa hàng thất bại"));
+                        return;
+                    }
+                    JSONObject data = response.optJSONObject("data");
+                    callback.onSuccess(data, response.optString("message", "Lưu vị trí thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
+        };
+
+        getQueue(context).add(request);
+    }
+
+    public static void updateStoreLocation(Context context, String token, int locationId, JSONObject body, DataCallback<Void> callback) {
+        String url = BASE_URL + "/store/" + locationId;
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, body,
+                response -> {
+                    if (!response.optBoolean("success", false)) {
+                        callback.onError(response.optString("message", "Cập nhật vị trí thất bại"));
+                        return;
+                    }
+                    callback.onSuccess(null, response.optString("message", "Cập nhật vị trí thành công"));
+                },
+                error -> callback.onError(getErrorMessage(error))) {
+            @Override
+            public Map<String, String> getHeaders() { return buildAuthHeader(token); }
         };
 
         getQueue(context).add(request);

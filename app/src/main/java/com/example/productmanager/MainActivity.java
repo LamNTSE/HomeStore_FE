@@ -36,6 +36,7 @@ public class MainActivity extends BaseCustomerActivity
 
     ImageView btnCartMain;
     ImageView btnFilter;
+    ImageView btnStoreLocationMain;
 
     FrameLayout frameCart;
     BadgeDrawable cartBadge;
@@ -64,6 +65,7 @@ public class MainActivity extends BaseCustomerActivity
         frameCart = findViewById(R.id.frameCart);
         btnCartMain = findViewById(R.id.btnCartMain);
         btnFilter = findViewById(R.id.btnFilter);
+        btnStoreLocationMain = findViewById(R.id.btnStoreLocationMain);
         ImageView avatar = findViewById(R.id.btnAvatar);
 
         // =============================
@@ -118,6 +120,10 @@ public class MainActivity extends BaseCustomerActivity
             Intent intent = new Intent(MainActivity.this, CartActivity.class);
             startActivity(intent);
         });
+
+        btnStoreLocationMain.setOnClickListener(v ->
+            startActivity(new Intent(MainActivity.this, StoreLocationActivity.class))
+        );
 
         // =============================
         // FILTER CLICK

@@ -11,6 +11,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class AdminChatListActivity extends AppCompatActivity
         implements ChatUserAdapter.OnUserClickListener {
@@ -18,6 +22,7 @@ public class AdminChatListActivity extends AppCompatActivity
     private RecyclerView recyclerChatUsers;
     private ChatUserAdapter adapter;
     private String token;
+    private int currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +30,7 @@ public class AdminChatListActivity extends AppCompatActivity
         setContentView(R.layout.activity_admin_chat_list);
 
         token = SessionManager.getToken(this);
+        currentUserId = SessionManager.getUserId(this);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
@@ -38,11 +44,11 @@ public class AdminChatListActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        loadPartners();
+        refreshChatUsers();
 
         // Refresh conversation list whenever a message is received in real-time
         SignalRManager.getInstance().connectChat(token);
-        SignalRManager.getInstance().setChatMessageListener(messageJson -> loadPartners());
+        SignalRManager.getInstance().setChatMessageListener(messageJson -> refreshChatUsers());
     }
 
     @Override
@@ -51,8 +57,8 @@ public class AdminChatListActivity extends AppCompatActivity
         SignalRManager.getInstance().setChatMessageListener(null);
     }
 
-    private void loadPartners() {
-        ApiClient.getConversationPartners(this, token, new ApiClient.DataCallback<JSONArray>() {
+    private void loadConversations() {
+        ApiClient.getConversations(this, token, new ApiClient.DataCallback<JSONArray>() {
             @Override
             public void onSuccess(JSONArray data, String message) {
                 adapter.updateUsers(data);
@@ -61,6 +67,41 @@ public class AdminChatListActivity extends AppCompatActivity
             @Override
             public void onError(String errorMessage) {
                 Toast.makeText(AdminChatListActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void refreshChatUsers() {
+        loadConversations();
+        loadUnreadCounts();
+    }
+
+    private void loadUnreadCounts() {
+        ApiClient.getUnreadMessages(this, token, new ApiClient.DataCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray data, String message) {
+                Map<Integer, Integer> unreadMap = new HashMap<>();
+
+                for (int i = 0; i < data.length(); i++) {
+                    JSONObject msg = data.optJSONObject(i);
+                    if (msg == null) {
+                        continue;
+                    }
+
+                    int receiverId = msg.optInt("receiverId", -1);
+                    int senderId = msg.optInt("senderId", -1);
+                    if (receiverId == currentUserId && senderId > 0) {
+                        int oldCount = unreadMap.getOrDefault(senderId, 0);
+                        unreadMap.put(senderId, oldCount + 1);
+                    }
+                }
+
+                adapter.updateUnreadCounts(unreadMap);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // Keep list usable even if unread count fails to load
             }
         });
     }

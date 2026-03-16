@@ -12,6 +12,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -30,6 +34,10 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
     private static final int BUBBLE_MARGIN_DP = 16;
 
     private ImageButton bubbleBtn;
+    private BadgeDrawable chatBadge;
+    private String token;
+    private int currentUserId;
+    private int adminUserId = -1;
     private float dX, dY;
     private long touchStartTime;
     private static final long TAP_THRESHOLD_MS = 200;
@@ -38,6 +46,29 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        token = SessionManager.getToken(this);
+        currentUserId = SessionManager.getUserId(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        token = SessionManager.getToken(this);
+        currentUserId = SessionManager.getUserId(this);
+
+        refreshUnreadBadge();
+
+        if (token != null && !token.isEmpty()) {
+            SignalRManager.getInstance().connectChat(token);
+            SignalRManager.getInstance().setChatMessageListener(messageJson -> refreshUnreadBadge());
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SignalRManager.getInstance().setChatMessageListener(null);
     }
 
     @Override
@@ -113,6 +144,96 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
         });
 
         addContentView(bubbleBtn, lp);
+        initChatBadge();
+        refreshUnreadBadge();
+    }
+
+    private void initChatBadge() {
+        chatBadge = BadgeDrawable.create(this);
+        chatBadge.setBackgroundColor(0xFFD32F2F);
+        chatBadge.setBadgeTextColor(0xFFFFFFFF);
+        chatBadge.setBadgeGravity(BadgeDrawable.TOP_END);
+        chatBadge.setHorizontalOffset(dpToPx(2));
+        chatBadge.setVerticalOffset(dpToPx(2));
+        chatBadge.setVisible(false);
+    }
+
+    private void refreshUnreadBadge() {
+        if (bubbleBtn == null || token == null || token.isEmpty()) {
+            updateBubbleBadge(0);
+            return;
+        }
+
+        if (adminUserId > 0) {
+            loadUnreadFromAdmin(adminUserId);
+            return;
+        }
+
+        ApiClient.getAdminUser(this, token, new ApiClient.DataCallback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject data, String message) {
+                adminUserId = data.optInt("userId", -1);
+                if (adminUserId > 0) {
+                    loadUnreadFromAdmin(adminUserId);
+                } else {
+                    updateBubbleBadge(0);
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                updateBubbleBadge(0);
+            }
+        });
+    }
+
+    private void loadUnreadFromAdmin(int adminId) {
+        ApiClient.getUnreadMessages(this, token, new ApiClient.DataCallback<JSONArray>() {
+            @Override
+            public void onSuccess(JSONArray data, String message) {
+                int unreadCount = 0;
+                for (int i = 0; i < data.length(); i++) {
+                    JSONObject msg = data.optJSONObject(i);
+                    if (msg == null) {
+                        continue;
+                    }
+
+                    int senderId = msg.optInt("senderId", -1);
+                    int receiverId = msg.optInt("receiverId", -1);
+                    if (senderId == adminId && receiverId == currentUserId) {
+                        unreadCount++;
+                    }
+                }
+
+                updateBubbleBadge(unreadCount);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                updateBubbleBadge(0);
+            }
+        });
+    }
+
+    private void updateBubbleBadge(int unreadCount) {
+        if (chatBadge == null || bubbleBtn == null) {
+            return;
+        }
+
+        FrameLayout root = findViewById(android.R.id.content);
+        if (root == null) {
+            return;
+        }
+
+        if (unreadCount > 0) {
+            chatBadge.setVisible(true);
+            chatBadge.setNumber(unreadCount);
+            BadgeUtils.attachBadgeDrawable(chatBadge, bubbleBtn, root);
+        } else {
+            chatBadge.clearNumber();
+            chatBadge.setVisible(false);
+            BadgeUtils.detachBadgeDrawable(chatBadge, bubbleBtn);
+        }
     }
 
     private GradientDrawable buildCircleBackground() {
@@ -136,6 +257,7 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
             @Override
             public void onSuccess(JSONObject data, String message) {
                 int adminId = data.optInt("userId", -1);
+                adminUserId = adminId;
                 String adminName = data.optString("fullName", "Chủ cửa hàng");
 
                 if (adminId < 0) {
