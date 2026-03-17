@@ -1219,6 +1219,7 @@ public class ApiClient {
         return new Feedback(
                 obj.optInt("feedbackId"),
                 obj.optInt("userId"),
+                obj.optInt("orderId"),
                 obj.optString("userFullName", ""),
                 obj.optInt("productId"),
                 obj.optString("productName", ""),
@@ -1303,38 +1304,119 @@ public class ApiClient {
         getQueue(context).add(request);
     }
 
-    public static void createFeedback(Context context, String token,
-                                       int productId, int rating, String comment,
-                                       DataCallback<Feedback> callback) {
-        String url = BASE_URL + "/feedbacks";
-        JSONObject body = new JSONObject();
-        try {
-            body.put("productId", productId);
-            body.put("rating", rating);
-            body.put("comment", comment != null ? comment : JSONObject.NULL);
-        } catch (JSONException e) {
-            callback.onError("Dữ liệu đánh giá không hợp lệ");
-            return;
-        }
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+    public static void getFeedbacksByProductAndOrder(
+            Context context,
+            String token,
+            int productId,
+            int orderId,
+            DataCallback<List<Feedback>> callback) {
+
+        String url = BASE_URL + "/feedbacks/product/" + productId + "/order/" + orderId;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
                 response -> {
-                    if (!response.optBoolean("success", false)) {
-                        callback.onError(response.optString("message", "Gửi đánh giá thất bại"));
-                        return;
+
+                    JSONArray data = response.optJSONArray("data");
+                    List<Feedback> list = new ArrayList<>();
+
+                    if (data != null) {
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject obj = data.optJSONObject(i);
+
+                            if (obj != null)
+                                list.add(parseFeedback(obj));
+                        }
                     }
-                    JSONObject data = response.optJSONObject("data");
-                    callback.onSuccess(data != null ? parseFeedback(data) : null,
-                            response.optString("message", "Đã gửi đánh giá"));
+
+                    callback.onSuccess(list, response.optString("message", ""));
                 },
-                error -> callback.onError(getErrorMessage(error))) {
+                error -> callback.onError(getErrorMessage(error))
+        ) {
             @Override
             public Map<String, String> getHeaders() {
                 return buildAuthHeader(token);
             }
         };
+
         getQueue(context).add(request);
     }
 
+    public static void createFeedback(Context context,
+                                      String token,
+                                      int productId,
+                                      int orderId,
+                                      int rating,
+                                      String comment,
+                                      DataCallback<Feedback> callback) {
+
+        String url = BASE_URL + "/feedbacks";
+
+        JSONObject body = new JSONObject();
+
+        try {
+            body.put("productId", productId);
+            body.put("orderId", orderId);
+            body.put("rating", rating);
+            body.put("comment", comment != null && !comment.isEmpty() ? comment : JSONObject.NULL);
+        } catch (JSONException e) {
+            callback.onError("Dữ liệu đánh giá không hợp lệ");
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                body,
+                response -> {
+
+                    boolean success = response.optBoolean("success", false);
+                    String message = response.optString("message", "");
+
+                    if (!success) {
+                        callback.onError(message);
+                        return;
+                    }
+
+                    JSONObject data = response.optJSONObject("data");
+
+                    Feedback fb = null;
+
+                    if (data != null) {
+                        fb = parseFeedback(data);
+                    }
+
+                    callback.onSuccess(fb, message);
+
+                },
+                error -> {
+
+                    String errorMsg = "Không thể gửi đánh giá";
+
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        errorMsg = new String(error.networkResponse.data);
+                    }
+
+                    callback.onError(errorMsg);
+                }
+        ) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer " + token);
+                headers.put("Content-Type", "application/json");
+
+                return headers;
+            }
+        };
+
+        getQueue(context).add(request);
+    }
     public static void updateFeedback(Context context, String token,
                                        int feedbackId, int rating, String comment,
                                        DataCallback<Feedback> callback) {
@@ -1410,6 +1492,7 @@ public class ApiClient {
                             if (obj == null) continue;
                             list.add(new OrderItem(
                                     obj.optInt("orderItemId"),
+                                    obj.optInt("orderId"),
                                     obj.optInt("productId"),
                                     obj.optString("productName", ""),
                                     obj.optString("imageUrl", null),
