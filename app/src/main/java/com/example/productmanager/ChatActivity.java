@@ -101,7 +101,7 @@ public class ChatActivity extends AppCompatActivity {
     private void loadMessages() {
         if (otherUserId < 0) return;
 
-        ApiClient.getConversation(this, token, otherUserId,
+        ApiClient.getConversationMessages(this, token, otherUserId,
                 new ApiClient.DataCallback<JSONArray>() {
                     @Override
                     public void onSuccess(JSONArray data, String message) {

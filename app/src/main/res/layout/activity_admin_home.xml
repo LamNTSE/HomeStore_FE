@@ -10,14 +10,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Header -->
-        <TextView
-            android:text="👑 Admin Dashboard"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <!-- Header with location icon -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:text="👑 Admin Dashboard"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"/>
+
+            <ImageView
+                android:id="@+id/btnStoreLocation"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_location"
+                android:padding="4dp"
+                android:contentDescription="Vị trí cửa hàng" />
+        </LinearLayout>
 
         <!-- Manage Products -->
         <Button
@@ -60,12 +76,19 @@
             android:layout_height="60dp"/>
 
         <!-- Chat -->
-        <Button
-            android:id="@+id/btnChat"
-            android:text="💬 Chat khách hàng"
-            android:layout_marginBottom="15dp"
+        <FrameLayout
+            android:id="@+id/layoutChatBadge"
             android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp">
+
+            <Button
+                android:id="@+id/btnChat"
+                android:text="💬 Chat khách hàng"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+
+        </FrameLayout>
 
         <!-- Logout -->
         <Button

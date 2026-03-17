@@ -1,13 +1,28 @@
 package com.example.productmanager;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class AdminHomeActivity extends AppCompatActivity {
 
     Button btnManageProducts, btnManageOrders, btnManageUsers, btnAddProduct, btnManageFeedbacks, btnLogout, btnChat;
+    ImageView btnStoreLocation;
+        FrameLayout layoutChatBadge;
+        private BadgeDrawable chatBadge;
+        private String token;
+        private int currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +35,13 @@ public class AdminHomeActivity extends AppCompatActivity {
         btnAddProduct = findViewById(R.id.btnManageVouchers);
         btnManageFeedbacks = findViewById(R.id.btnManageFeedbacks);
         btnLogout = findViewById(R.id.btnLogout);
+        btnChat = findViewById(R.id.btnChat);
+        btnStoreLocation = findViewById(R.id.btnStoreLocation);
+        layoutChatBadge = findViewById(R.id.layoutChatBadge);
+
+        token = SessionManager.getToken(this);
+        currentUserId = SessionManager.getUserId(this);
+        initChatBadge();
 
         btnManageProducts.setOnClickListener(v ->
                 startActivity(new Intent(this, ManageProductsActivity.class)));
@@ -27,8 +49,8 @@ public class AdminHomeActivity extends AppCompatActivity {
         btnManageOrders.setOnClickListener(v ->
                 startActivity(new Intent(this, ManageOrdersActivity.class)));
 
-//        btnManageUsers.setOnClickListener(v ->
-//                startActivity(new Intent(this, ManageUsersActivity.class)));
+        btnManageUsers.setOnClickListener(v ->
+                startActivity(new Intent(this, ManageUsersActivity.class)));
 
         btnAddProduct.setOnClickListener(v ->
                 startActivity(new Intent(this, ManageVouchersActivity.class)));
@@ -36,9 +58,11 @@ public class AdminHomeActivity extends AppCompatActivity {
         btnManageFeedbacks.setOnClickListener(v ->
                 startActivity(new Intent(this, ManageFeedbacksActivity.class)));
 
-        btnChat = findViewById(R.id.btnChat);
         btnChat.setOnClickListener(v ->
                 startActivity(new Intent(this, AdminChatListActivity.class)));
+
+        btnStoreLocation.setOnClickListener(v ->
+                startActivity(new Intent(this, AdminStoreLocationActivity.class)));
 
         btnLogout.setOnClickListener(v -> {
             SessionManager.clear(this);
@@ -46,4 +70,60 @@ public class AdminHomeActivity extends AppCompatActivity {
             finish();
         });
     }
+
+        @Override
+        protected void onResume() {
+                super.onResume();
+                refreshUnreadChatBadge();
+
+                SignalRManager.getInstance().connectChat(token);
+                SignalRManager.getInstance().setChatMessageListener(messageJson -> refreshUnreadChatBadge());
+        }
+
+        @Override
+        protected void onPause() {
+                super.onPause();
+                SignalRManager.getInstance().setChatMessageListener(null);
+        }
+
+        private void initChatBadge() {
+                chatBadge = BadgeDrawable.create(this);
+                chatBadge.setBackgroundColor(Color.parseColor("#D32F2F"));
+                chatBadge.setBadgeTextColor(Color.WHITE);
+                chatBadge.setBadgeGravity(BadgeDrawable.TOP_END);
+                chatBadge.setVerticalOffset(dpToPx(8));
+                chatBadge.setHorizontalOffset(dpToPx(8));
+                chatBadge.setVisible(false);
+        }
+
+        private void refreshUnreadChatBadge() {
+                ApiClient.getUnreadMessages(this, token, new ApiClient.DataCallback<JSONArray>() {
+                        @Override
+                        public void onSuccess(JSONArray data, String message) {
+                                int unreadCount = data.length();
+                                updateChatBadge(unreadCount);
+                        }
+
+                        @Override
+                        public void onError(String errorMessage) {
+                                updateChatBadge(0);
+                        }
+                });
+        }
+
+        private void updateChatBadge(int unreadCount) {
+                if (unreadCount > 0) {
+                        chatBadge.setVisible(true);
+                        chatBadge.setNumber(unreadCount);
+                        BadgeUtils.attachBadgeDrawable(chatBadge, btnChat, layoutChatBadge);
+                } else {
+                        chatBadge.clearNumber();
+                        chatBadge.setVisible(false);
+                        BadgeUtils.detachBadgeDrawable(chatBadge, btnChat);
+                }
+        }
+
+        private int dpToPx(int dp) {
+                return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
+        }
 }

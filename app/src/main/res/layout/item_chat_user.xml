@@ -18,13 +18,20 @@
         android:padding="12dp"
         android:gravity="center_vertical">
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/imgUserAvatar"
+        <FrameLayout
+            android:id="@+id/layoutAvatarBadge"
             android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_avatar"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/CircleImage" />
+            android:layout_height="48dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgUserAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_avatar"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/CircleImage" />
+
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"

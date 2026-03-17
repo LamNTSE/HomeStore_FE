@@ -3,6 +3,7 @@ package com.example.productmanager;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,8 +31,9 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     private List<Order> list;
     private boolean isAdminMode;
     private OrderActionListener listener;
-    // orderId -> true means order has at least one feedback
-    private Map<Integer, Boolean> feedbackStatus = new HashMap<>();
+
+    // key = orderId_productId
+    private Map<String, Boolean> feedbackStatus = new HashMap<>();
 
     public OrderAdapter(Context context, List<Order> list, boolean isAdminMode, OrderActionListener listener) {
         this.context = context;
@@ -40,21 +42,47 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         this.listener = listener;
     }
 
-    public void updateFeedbackStatus(Map<Integer, Boolean> map) {
-        this.feedbackStatus.clear();
-        if (map != null) feedbackStatus.putAll(map);
+    // =========================
+    // UPDATE FEEDBACK STATUS
+    // =========================
+    public void updateFeedbackStatus(List<Feedback> feedbacks) {
+
+        feedbackStatus.clear();
+
+        Log.d("DEBUG_FEEDBACK", "===== LOAD FEEDBACK =====");
+
+        if (feedbacks != null) {
+
+            for (Feedback fb : feedbacks) {
+
+                int orderId = fb.getOrderId();
+                int productId = fb.getProductId();
+
+                String key = orderId + "_" + productId;
+
+                Log.d("DEBUG_FEEDBACK", "Feedback key = " + key);
+
+                feedbackStatus.put(key, true);
+            }
+        }
+
+        Log.d("DEBUG_FEEDBACK", "Total feedback map size = " + feedbackStatus.size());
+
         notifyDataSetChanged();
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_order, parent, false);
+
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+
         Order order = list.get(position);
 
         holder.tvOrderId.setText("Đơn hàng #" + order.getOrderId());
@@ -76,29 +104,37 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         bg.setColor(getStatusColor(status));
         holder.tvOrderStatus.setBackground(bg);
 
-        // Reset button visibility
+        // reset buttons
         holder.btnConfirm.setVisibility(View.GONE);
         holder.btnCancel.setVisibility(View.GONE);
         holder.layoutActions.setVisibility(View.GONE);
 
         if (isAdminMode) {
-            // Admin: Pending hoặc Confirmed -> có thể xác nhận Shipping hoặc hủy
+
             if ("Pending".equals(status) || "Confirmed".equals(status)) {
+
                 holder.layoutActions.setVisibility(View.VISIBLE);
+
                 holder.btnConfirm.setVisibility(View.VISIBLE);
                 holder.btnConfirm.setText("Xác nhận");
+
                 holder.btnCancel.setVisibility(View.VISIBLE);
             }
+
         } else {
-            // User: Pending -> show "Huỷ đơn"
-            // User: Shipping -> show "Xác nhận nhận hàng" + "Huỷ đơn"
+
             if ("Pending".equals(status) || "Confirmed".equals(status)) {
+
                 holder.layoutActions.setVisibility(View.VISIBLE);
                 holder.btnCancel.setVisibility(View.VISIBLE);
+
             } else if ("Shipping".equals(status)) {
+
                 holder.layoutActions.setVisibility(View.VISIBLE);
+
                 holder.btnConfirm.setVisibility(View.VISIBLE);
                 holder.btnConfirm.setText("Xác nhận nhận hàng");
+
                 holder.btnCancel.setVisibility(View.VISIBLE);
             }
         }
@@ -106,18 +142,47 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         holder.btnConfirm.setOnClickListener(v -> {
             if (listener != null) listener.onConfirm(order);
         });
+
         holder.btnCancel.setOnClickListener(v -> {
             if (listener != null) listener.onCancel(order);
         });
 
-        // Feedback link: only visible for non-admin, Delivered orders
-        if (!isAdminMode && "Delivered".equals(status)) {
+        // ======================
+        // FEEDBACK LOGIC
+        // ======================
+
+        if (!isAdminMode && "Delivered".equalsIgnoreCase(status)) {
+
             holder.tvFeedbackLink.setVisibility(View.VISIBLE);
-            boolean hasFeedback = Boolean.TRUE.equals(feedbackStatus.get(order.getOrderId()));
-            holder.tvFeedbackLink.setText(hasFeedback ? "Xem đánh giá" : "Viết đánh giá");
+
+            boolean hasFeedback = false;
+
+            Log.d("DEBUG_ORDER", "---- CHECK ORDER: " + order.getOrderId());
+
+            for (String key : feedbackStatus.keySet()) {
+
+                Log.d("DEBUG_COMPARE", "Compare key = " + key + " vs orderId = " + order.getOrderId());
+
+                if (key.startsWith(order.getOrderId() + "_")) {
+                    hasFeedback = true;
+                    break;
+                }
+            }
+
+            Log.d("DEBUG_RESULT", "Order " + order.getOrderId() + " hasFeedback = " + hasFeedback);
+
+            if (hasFeedback) {
+                holder.tvFeedbackLink.setText("Xem đánh giá");
+            } else {
+                holder.tvFeedbackLink.setText("Viết đánh giá");
+            }
+
             holder.tvFeedbackLink.setOnClickListener(v -> {
-                if (listener != null) listener.onFeedbackClick(order);
+                if (listener != null) {
+                    listener.onFeedbackClick(order);
+                }
             });
+
         } else {
             holder.tvFeedbackLink.setVisibility(View.GONE);
         }
@@ -133,19 +198,31 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     }
 
     private int getStatusColor(String status) {
+
         switch (status) {
-            case "Confirmed":  return Color.parseColor("#1976D2");
-            case "Shipping":   return Color.parseColor("#FF9800");
-            case "Delivered":  return Color.parseColor("#4CAF50");
-            case "Cancelled":  return Color.parseColor("#F44336");
-            default:           return Color.parseColor("#9E9E9E"); // Pending
+
+            case "Confirmed":
+                return Color.parseColor("#1976D2");
+
+            case "Shipping":
+                return Color.parseColor("#FF9800");
+
+            case "Delivered":
+                return Color.parseColor("#4CAF50");
+
+            case "Cancelled":
+                return Color.parseColor("#F44336");
+
+            default:
+                return Color.parseColor("#9E9E9E");
         }
     }
 
     private String formatDate(String iso) {
+
         if (iso == null || iso.isEmpty()) return "";
+
         try {
-            // Lấy phần ngày từ ISO string (yyyy-MM-ddT...)
             return iso.substring(0, Math.min(iso.length(), 10));
         } catch (Exception e) {
             return iso;
@@ -153,13 +230,26 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvOrderId, tvOrderStatus, tvReceiverName, tvPhone,
-                tvAddress, tvTotalAmount, tvPaymentMethod, tvCreatedAt, tvFeedbackLink;
-        Button btnConfirm, btnCancel;
+
+        TextView tvOrderId;
+        TextView tvOrderStatus;
+        TextView tvReceiverName;
+        TextView tvPhone;
+        TextView tvAddress;
+        TextView tvTotalAmount;
+        TextView tvPaymentMethod;
+        TextView tvCreatedAt;
+        TextView tvFeedbackLink;
+
+        Button btnConfirm;
+        Button btnCancel;
+
         LinearLayout layoutActions;
 
         ViewHolder(View itemView) {
+
             super(itemView);
+
             tvOrderId = itemView.findViewById(R.id.tvOrderId);
             tvOrderStatus = itemView.findViewById(R.id.tvOrderStatus);
             tvReceiverName = itemView.findViewById(R.id.tvReceiverName);
@@ -168,9 +258,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvTotalAmount = itemView.findViewById(R.id.tvTotalAmount);
             tvPaymentMethod = itemView.findViewById(R.id.tvPaymentMethod);
             tvCreatedAt = itemView.findViewById(R.id.tvCreatedAt);
+
             btnConfirm = itemView.findViewById(R.id.btnConfirm);
             btnCancel = itemView.findViewById(R.id.btnCancel);
             layoutActions = itemView.findViewById(R.id.layoutActions);
+
             tvFeedbackLink = itemView.findViewById(R.id.tvFeedbackLink);
         }
     }

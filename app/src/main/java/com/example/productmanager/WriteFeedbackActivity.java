@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,16 +17,13 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class WriteFeedbackActivity extends BaseCustomerActivity {
 
@@ -33,17 +32,28 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
     private final List<FeedbackItem> itemList = new ArrayList<>();
 
     static class FeedbackItem {
+
         OrderItem orderItem;
         Feedback existing;
 
+        float tempRating = 5;
+        String tempComment = "";
+
         FeedbackItem(OrderItem orderItem, Feedback existing) {
+
             this.orderItem = orderItem;
             this.existing = existing;
+
+            if (existing != null) {
+                tempRating = existing.getRating();
+                tempComment = existing.getComment() != null ? existing.getComment() : "";
+            }
         }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_write_feedback);
 
@@ -54,47 +64,88 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
         btnBack.setOnClickListener(v -> finish());
 
         int orderId = getIntent().getIntExtra("orderId", -1);
+
         if (orderId < 0) {
             finish();
             return;
         }
 
         adapter = new WriteFeedbackAdapter(this, itemList, (item, rating, comment, position) -> {
+
             String token = SessionManager.getToken(this);
 
             if (item.existing == null) {
 
-                ApiClient.createFeedback(this, token, item.orderItem.getProductId(), rating, comment,
+                ApiClient.createFeedback(
+                        this,
+                        token,
+                        item.orderItem.getProductId(),
+                        orderId,
+                        rating,
+                        comment,
                         new ApiClient.DataCallback<Feedback>() {
 
                             @Override
                             public void onSuccess(Feedback fb, String message) {
+
                                 item.existing = fb;
+                                item.tempRating = fb.getRating();
+                                item.tempComment = fb.getComment();
+
                                 adapter.notifyItemChanged(position);
-                                Toast.makeText(WriteFeedbackActivity.this, message, Toast.LENGTH_SHORT).show();
+
+                                Toast.makeText(
+                                        WriteFeedbackActivity.this,
+                                        message,
+                                        Toast.LENGTH_SHORT
+                                ).show();
                             }
 
                             @Override
                             public void onError(String error) {
-                                Toast.makeText(WriteFeedbackActivity.this, error, Toast.LENGTH_SHORT).show();
+
+                                Toast.makeText(
+                                        WriteFeedbackActivity.this,
+                                        error,
+                                        Toast.LENGTH_SHORT
+                                ).show();
                             }
                         });
 
             } else {
 
-                ApiClient.updateFeedback(this, token, item.existing.getFeedbackId(), rating, comment,
+                ApiClient.updateFeedback(
+                        this,
+                        token,
+                        item.existing.getFeedbackId(),
+                        rating,
+                        comment,
                         new ApiClient.DataCallback<Feedback>() {
 
                             @Override
                             public void onSuccess(Feedback fb, String message) {
+
                                 item.existing = fb;
+                                item.tempRating = fb.getRating();
+                                item.tempComment = fb.getComment();
+
                                 adapter.notifyItemChanged(position);
-                                Toast.makeText(WriteFeedbackActivity.this, message, Toast.LENGTH_SHORT).show();
+
+                                Toast.makeText(
+                                        WriteFeedbackActivity.this,
+                                        message,
+                                        Toast.LENGTH_SHORT
+                                ).show();
                             }
 
                             @Override
                             public void onError(String error) {
-                                Toast.makeText(WriteFeedbackActivity.this, error, Toast.LENGTH_SHORT).show();
+
+                                Toast.makeText(
+                                        WriteFeedbackActivity.this,
+                                        error,
+                                        Toast.LENGTH_SHORT
+                                ).show();
                             }
                         });
             }
@@ -116,42 +167,82 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
                     @Override
                     public void onSuccess(List<OrderItem> orderItems, String msg) {
 
-                        ApiClient.getMyFeedbacks(WriteFeedbackActivity.this, token,
-                                new ApiClient.DataCallback<List<Feedback>>() {
+                        itemList.clear();
 
-                                    @SuppressLint("NotifyDataSetChanged")
-                                    @Override
-                                    public void onSuccess(List<Feedback> feedbacks, String m) {
+                        if (orderItems.isEmpty()) {
 
-                                        Map<Integer, Feedback> fbMap = new HashMap<>();
+                            adapter.notifyDataSetChanged();
+                            tvEmpty.setVisibility(View.VISIBLE);
+                            return;
+                        }
 
-                                        for (Feedback fb : feedbacks)
-                                            fbMap.put(fb.getProductId(), fb);
+                        final int[] loaded = {0};
 
-                                        itemList.clear();
+                        for (OrderItem oi : orderItems) {
 
-                                        for (OrderItem oi : orderItems) {
-                                            itemList.add(new FeedbackItem(oi,
-                                                    fbMap.get(oi.getProductId())));
+                            ApiClient.getFeedbacksByProductAndOrder(
+                                    WriteFeedbackActivity.this,
+                                    token,
+                                    oi.getProductId(),
+                                    orderId,
+                                    new ApiClient.DataCallback<List<Feedback>>() {
+
+                                        @SuppressLint("NotifyDataSetChanged")
+                                        @Override
+                                        public void onSuccess(List<Feedback> data, String m) {
+
+                                            Feedback existing = null;
+
+                                            if (data != null && !data.isEmpty()) {
+                                                existing = data.get(0);
+                                            }
+
+                                            itemList.add(new FeedbackItem(oi, existing));
+
+                                            loaded[0]++;
+
+                                            if (loaded[0] == orderItems.size()) {
+
+                                                adapter.notifyDataSetChanged();
+
+                                                tvEmpty.setVisibility(
+                                                        itemList.isEmpty()
+                                                                ? View.VISIBLE
+                                                                : View.GONE
+                                                );
+                                            }
                                         }
 
-                                        adapter.notifyDataSetChanged();
-                                        tvEmpty.setVisibility(itemList.isEmpty()
-                                                ? View.VISIBLE : View.GONE);
-                                    }
+                                        @Override
+                                        public void onError(String error) {
 
-                                    @Override
-                                    public void onError(String error) {
-                                        Toast.makeText(WriteFeedbackActivity.this,
-                                                error, Toast.LENGTH_SHORT).show();
-                                    }
-                                });
+                                            itemList.add(new FeedbackItem(oi, null));
+
+                                            loaded[0]++;
+
+                                            if (loaded[0] == orderItems.size()) {
+
+                                                adapter.notifyDataSetChanged();
+
+                                                tvEmpty.setVisibility(
+                                                        itemList.isEmpty()
+                                                                ? View.VISIBLE
+                                                                : View.GONE
+                                                );
+                                            }
+                                        }
+                                    });
+                        }
                     }
 
                     @Override
                     public void onError(String error) {
-                        Toast.makeText(WriteFeedbackActivity.this,
-                                error, Toast.LENGTH_SHORT).show();
+
+                        Toast.makeText(
+                                WriteFeedbackActivity.this,
+                                error,
+                                Toast.LENGTH_SHORT
+                        ).show();
                     }
                 });
     }
@@ -160,8 +251,7 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
         void onSave(FeedbackItem item, int rating, String comment, int position);
     }
 
-    static class WriteFeedbackAdapter
-            extends RecyclerView.Adapter<WriteFeedbackAdapter.VH> {
+    static class WriteFeedbackAdapter extends RecyclerView.Adapter<WriteFeedbackAdapter.VH> {
 
         private final Context context;
         private final List<FeedbackItem> list;
@@ -186,17 +276,19 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
         }
 
         @Override
-        public void onBindViewHolder(VH holder, int position) {
+        public void onBindViewHolder(VH holder, @SuppressLint("RecyclerView") int position) {
 
             FeedbackItem item = list.get(position);
             OrderItem oi = item.orderItem;
 
             holder.tvProductName.setText(oi.getProductName());
 
-            if (oi.getImageUrl() != null && !oi.getImageUrl().isEmpty()) {
+            String imageUrl = oi.getImageUrl();
+
+            if (imageUrl != null && !imageUrl.isEmpty()) {
 
                 Glide.with(context)
-                        .load(oi.getImageUrl())
+                        .load(imageUrl)
                         .placeholder(R.mipmap.ic_launcher)
                         .error(R.mipmap.ic_launcher)
                         .into(holder.imgProduct);
@@ -206,15 +298,34 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
                 holder.imgProduct.setImageResource(R.mipmap.ic_launcher);
             }
 
+            holder.rbRating.setOnRatingBarChangeListener(null);
+            holder.rbRating.setRating(item.tempRating);
+            updateRatingText(holder.tvRatingText, item.tempRating);
+
+            holder.rbRating.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+
+                if (fromUser) {
+                    item.tempRating = rating;
+                    updateRatingText(holder.tvRatingText, rating);
+                }
+            });
+
+            holder.edtComment.clearFocus();
+            holder.edtComment.setText(item.tempComment);
+
+            holder.edtComment.addTextChangedListener(new TextWatcher() {
+
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    item.tempComment = s.toString();
+                }
+
+                @Override public void afterTextChanged(Editable s) {}
+            });
+
             if (item.existing != null) {
-
-                holder.rbRating.setRating(item.existing.getRating());
-
-                holder.edtComment.setText(
-                        item.existing.getComment() != null
-                                ? item.existing.getComment()
-                                : ""
-                );
 
                 holder.btnSave.setText("Cập nhật đánh giá");
 
@@ -232,28 +343,14 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
 
             } else {
 
-                holder.rbRating.setRating(5);
-                holder.edtComment.setText("");
                 holder.btnSave.setText("Lưu đánh giá");
                 holder.layoutAdminReply.setVisibility(View.GONE);
             }
 
-            // HIỂN THỊ TEXT RATING NGAY KHI LOAD
-            updateRatingText(holder.tvRatingText,
-                    holder.rbRating.getRating());
-
-            // KHI USER THAY ĐỔI SAO
-            holder.rbRating.setOnRatingBarChangeListener(
-                    (ratingBar, rating, fromUser) ->
-                            updateRatingText(holder.tvRatingText, rating)
-            );
-
             holder.btnSave.setOnClickListener(v -> {
 
-                int rating = (int) holder.rbRating.getRating();
-
-                String comment =
-                        holder.edtComment.getText().toString().trim();
+                int rating = (int) item.tempRating;
+                String comment = item.tempComment.trim();
 
                 if (rating == 0) {
 
@@ -264,8 +361,7 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
                     return;
                 }
 
-                if (callback != null)
-                    callback.onSave(item, rating, comment, position);
+                callback.onSave(item, rating, comment, position);
             });
         }
 
@@ -301,15 +397,15 @@ public class WriteFeedbackActivity extends BaseCustomerActivity {
 
         @Override
         public int getItemCount() {
-            return list != null ? list.size() : 0;
+            return list.size();
         }
 
         static class VH extends RecyclerView.ViewHolder {
 
             ImageView imgProduct;
             TextView tvProductName;
-            TextView tvAdminReplyText;
             TextView tvRatingText;
+            TextView tvAdminReplyText;
 
             RatingBar rbRating;
             EditText edtComment;

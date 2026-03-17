@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">ProductManager</string>
+    <string name="google_maps_key">AIzaSyDkFyb6adYIEOMzRx0-RLsHe-BbSkR2arM</string>
 
     <!-- Google Web Client ID -->
     <string name="default_web_client_id">

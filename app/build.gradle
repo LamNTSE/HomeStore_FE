@@ -36,6 +36,7 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation libs.android.volley
+    implementation 'com.google.android.gms:play-services-maps:19.0.0'
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     implementation libs.play.services.auth
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
