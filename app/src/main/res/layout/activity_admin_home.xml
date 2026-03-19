@@ -44,12 +44,19 @@
             android:layout_height="60dp"/>
 
         <!-- Manage Orders -->
-        <Button
-            android:id="@+id/btnManageOrders"
-            android:text="Quản lý đơn hàng"
-            android:layout_marginBottom="15dp"
+        <FrameLayout
+            android:id="@+id/layoutOrderBadge"
             android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp">
+
+            <Button
+                android:id="@+id/btnManageOrders"
+                android:text="Quản lý đơn hàng"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+                
+        </FrameLayout>
 
         <!-- Manage Users -->
         <Button

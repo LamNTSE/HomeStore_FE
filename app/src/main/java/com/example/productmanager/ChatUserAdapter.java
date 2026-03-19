@@ -13,8 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.badge.BadgeDrawable;
-import com.google.android.material.badge.BadgeUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -95,23 +93,16 @@ public class ChatUserAdapter extends RecyclerView.Adapter<ChatUserAdapter.ViewHo
     }
 
     private void bindUnreadBadge(ViewHolder holder, int unreadCount) {
-        if (holder.unreadBadge == null) {
-            holder.unreadBadge = BadgeDrawable.create(context);
-            holder.unreadBadge.setBackgroundColor(Color.parseColor("#D32F2F"));
-            holder.unreadBadge.setBadgeTextColor(Color.WHITE);
-            holder.unreadBadge.setBadgeGravity(BadgeDrawable.TOP_END);
-            holder.unreadBadge.setVerticalOffset(dpToPx(2));
-            holder.unreadBadge.setHorizontalOffset(dpToPx(2));
-        }
-
         if (unreadCount > 0) {
-            holder.unreadBadge.setVisible(true);
-            holder.unreadBadge.setNumber(unreadCount);
-            BadgeUtils.attachBadgeDrawable(holder.unreadBadge, holder.imgUserAvatar, holder.layoutAvatarBadge);
+            holder.txtUnreadCount.setVisibility(View.VISIBLE);
+            holder.txtUnreadCount.setText(unreadCount > 99 ? "99+" : String.valueOf(unreadCount));
+            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+            bg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            bg.setCornerRadius(dpToPx(9));
+            bg.setColor(Color.parseColor("#D32F2F"));
+            holder.txtUnreadCount.setBackground(bg);
         } else {
-            holder.unreadBadge.clearNumber();
-            holder.unreadBadge.setVisible(false);
-            BadgeUtils.detachBadgeDrawable(holder.unreadBadge, holder.imgUserAvatar);
+            holder.txtUnreadCount.setVisibility(View.GONE);
         }
     }
 
@@ -138,18 +129,16 @@ public class ChatUserAdapter extends RecyclerView.Adapter<ChatUserAdapter.ViewHo
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        FrameLayout layoutAvatarBadge;
         ImageView imgUserAvatar;
-        TextView txtUserName, txtLastMessage, txtTime;
-        BadgeDrawable unreadBadge;
+        TextView txtUserName, txtLastMessage, txtTime, txtUnreadCount;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            layoutAvatarBadge = itemView.findViewById(R.id.layoutAvatarBadge);
             imgUserAvatar = itemView.findViewById(R.id.imgUserAvatar);
             txtUserName = itemView.findViewById(R.id.txtUserName);
             txtLastMessage = itemView.findViewById(R.id.txtLastMessage);
             txtTime = itemView.findViewById(R.id.txtTime);
+            txtUnreadCount = itemView.findViewById(R.id.txtUnreadCount);
         }
     }
 }
