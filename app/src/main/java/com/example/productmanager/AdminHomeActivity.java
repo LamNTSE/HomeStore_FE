@@ -65,6 +65,7 @@ public class AdminHomeActivity extends AppCompatActivity {
                 startActivity(new Intent(this, AdminStoreLocationActivity.class)));
 
         btnLogout.setOnClickListener(v -> {
+            SignalRManager.getInstance().disconnectAll();
             SessionManager.clear(this);
             startActivity(new Intent(this, LoginActivity.class));
             finish();

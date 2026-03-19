@@ -9,6 +9,8 @@ import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.List;
+
 import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
@@ -163,11 +165,33 @@ public class LoginActivity extends AppCompatActivity {
 
         if ("Admin".equalsIgnoreCase(role)) {
             startActivity(new Intent(this, AdminHomeActivity.class));
+            finish();
         } else {
-            startActivity(new Intent(this, MainActivity.class));
-        }
+            ApiClient.getCart(this, token, new ApiClient.DataCallback<List<CartItem>>() {
+                @Override
+                public void onSuccess(List<CartItem> data, String message) {
+                    int count = 0;
+                    if (data != null) {
+                        for (CartItem item : data) {
+                            count += item.getQuantity();
+                        }
+                    }
+                    if (count > 0) {
+                        NotificationHelper.showNotification(LoginActivity.this, 
+                                "Giỏ hàng của bạn", 
+                                "Bạn đang có " + count + " sản phẩm chờ thanh toán!");
+                    }
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finish();
+                }
 
-        finish();
+                @Override
+                public void onError(String errorMessage) {
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finish();
+                }
+            });
+        }
     }
 
     private String getRoleFromToken(String token) {

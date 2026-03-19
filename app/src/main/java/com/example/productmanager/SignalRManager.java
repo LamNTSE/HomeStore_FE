@@ -50,6 +50,7 @@ public class SignalRManager {
     // ─── Internal state ───────────────────────────────────────────────────────
     private HubConnection chatConnection;
     private HubConnection orderConnection;
+    private HubConnection cartConnection;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Gson gson = new Gson();
 
@@ -72,6 +73,15 @@ public class SignalRManager {
     private ChatMessageListener chatMessageListener;
     private OrderUpdateListener orderUpdateListener;
     private NewOrderListener newOrderListener;
+
+    public interface CartUpdateListener {
+        void onProductRemovedFromCart(String messageJson);
+    }
+    private CartUpdateListener cartUpdateListener;
+
+    public void setCartUpdateListener(CartUpdateListener listener) {
+        this.cartUpdateListener = listener;
+    }
 
     public void setChatMessageListener(ChatMessageListener listener) {
         this.chatMessageListener = listener;
@@ -164,10 +174,47 @@ public class SignalRManager {
         }
     }
 
+    // ─── Cart Hub ───────────────────────────────────────────────────────────
+
+    public void connectCart(String token) {
+        if (cartConnection != null
+                && cartConnection.getConnectionState() == HubConnectionState.CONNECTED) {
+            return;
+        }
+
+        String url = ApiConfig.SIGNALR_BASE_URL + "/hubs/cart";
+        cartConnection = HubConnectionBuilder.create(url)
+                .withAccessTokenProvider(Single.just(token))
+                .setHttpClientBuilderCallback(this::applyDevSslConfig)
+                .build();
+
+        cartConnection.on("ProductRemovedFromCart", (msg) -> {
+            if (cartUpdateListener != null) {
+                String json = gson.toJson(msg);
+                mainHandler.post(() -> cartUpdateListener.onProductRemovedFromCart(json));
+            }
+        }, Object.class);
+
+        cartConnection.start()
+                .subscribe(
+                        () -> Log.d(TAG, "Cart hub connected"),
+                        err -> Log.e(TAG, "Cart hub error: " + err.getMessage()));
+    }
+
+    public void disconnectCart() {
+        if (cartConnection != null) {
+            cartConnection.stop().subscribe(
+                    () -> Log.d(TAG, "Cart hub disconnected"),
+                    err -> Log.e(TAG, "Cart hub stop error: " + err.getMessage()));
+            cartConnection = null;
+        }
+    }
+
     /** Stops both hub connections. Call on user logout. */
     public void disconnectAll() {
         disconnectChat();
         disconnectOrders();
+        disconnectCart();
     }
 
     // ─── SSL helper (dev only – trusts all certs for local HTTPS) ────────────
