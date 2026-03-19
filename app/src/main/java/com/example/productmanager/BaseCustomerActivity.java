@@ -7,13 +7,18 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.util.TypedValue;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.view.Gravity;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.badge.BadgeDrawable;
-import com.google.android.material.badge.BadgeUtils;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,8 +38,9 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
     private static final int BUBBLE_SIZE_DP = 56;
     private static final int BUBBLE_MARGIN_DP = 16;
 
+    private FrameLayout bubbleContainer;
     private ImageButton bubbleBtn;
-    private BadgeDrawable chatBadge;
+    private TextView badgeTextView;
     private String token;
     private int currentUserId;
     private int adminUserId = -1;
@@ -94,7 +100,11 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
     private void addFloatingChatBubble() {
         int sizePx = dpToPx(BUBBLE_SIZE_DP);
         int marginPx = dpToPx(BUBBLE_MARGIN_DP);
+        int badgeOverflowPx = dpToPx(8); // Space for badge to overlap
 
+        bubbleContainer = new FrameLayout(this);
+
+        // 1. Chat Bubble Button
         bubbleBtn = new ImageButton(this);
         bubbleBtn.setImageResource(R.drawable.ic_chat);
         bubbleBtn.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
@@ -102,13 +112,39 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
         bubbleBtn.setBackground(buildCircleBackground());
         bubbleBtn.setElevation(dpToPx(8));
         bubbleBtn.setContentDescription("Chat hỗ trợ");
+        bubbleBtn.setClickable(false);
+        bubbleBtn.setFocusable(false);
 
-        // Position: bottom-right corner (resolved after first layout)
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(sizePx, sizePx);
-        lp.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
-        lp.setMargins(0, 0, marginPx, marginPx);
+        FrameLayout.LayoutParams btnLp = new FrameLayout.LayoutParams(sizePx, sizePx);
+        btnLp.setMargins(badgeOverflowPx, badgeOverflowPx, badgeOverflowPx, badgeOverflowPx);
+        bubbleContainer.addView(bubbleBtn, btnLp);
 
-        bubbleBtn.setOnTouchListener(new View.OnTouchListener() {
+        // 2. Custom Badge TextView
+        badgeTextView = new TextView(this);
+        badgeTextView.setTextColor(Color.WHITE);
+        badgeTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        badgeTextView.setTypeface(null, Typeface.BOLD);
+        badgeTextView.setGravity(Gravity.CENTER);
+        badgeTextView.setBackground(buildBadgeBackground());
+        badgeTextView.setElevation(dpToPx(10)); // Higher than bubble to overlap
+        badgeTextView.setVisibility(View.GONE);
+
+        int badgeHeightPx = dpToPx(24);
+        FrameLayout.LayoutParams badgeLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, badgeHeightPx);
+        badgeLp.gravity = Gravity.TOP | Gravity.END;
+        badgeLp.setMargins(0, 0, 0, 0);
+        badgeTextView.setMinWidth(badgeHeightPx);
+        badgeTextView.setPadding(dpToPx(6), 0, dpToPx(6), 0);
+        bubbleContainer.addView(badgeTextView, badgeLp);
+
+        // 3. Wrapper container positioning
+        FrameLayout.LayoutParams containerLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        containerLp.gravity = Gravity.BOTTOM | Gravity.END;
+        containerLp.setMargins(0, 0, marginPx, marginPx);
+
+        bubbleContainer.setOnTouchListener(new View.OnTouchListener() {
             private float startRawX, startRawY;
 
             @Override
@@ -134,7 +170,6 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
                         float slopPx = dpToPx(TAP_SLOP_DP);
 
                         if (elapsed < TAP_THRESHOLD_MS && distX < slopPx && distY < slopPx) {
-                            // Treat as tap → open chat
                             openCustomerChat();
                         }
                         return true;
@@ -143,19 +178,8 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
             }
         });
 
-        addContentView(bubbleBtn, lp);
-        initChatBadge();
+        addContentView(bubbleContainer, containerLp);
         refreshUnreadBadge();
-    }
-
-    private void initChatBadge() {
-        chatBadge = BadgeDrawable.create(this);
-        chatBadge.setBackgroundColor(0xFFD32F2F);
-        chatBadge.setBadgeTextColor(0xFFFFFFFF);
-        chatBadge.setBadgeGravity(BadgeDrawable.TOP_END);
-        chatBadge.setHorizontalOffset(dpToPx(2));
-        chatBadge.setVerticalOffset(dpToPx(2));
-        chatBadge.setVisible(false);
     }
 
     private void refreshUnreadBadge() {
@@ -216,23 +240,15 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
     }
 
     private void updateBubbleBadge(int unreadCount) {
-        if (chatBadge == null || bubbleBtn == null) {
-            return;
-        }
-
-        FrameLayout root = findViewById(android.R.id.content);
-        if (root == null) {
+        if (badgeTextView == null) {
             return;
         }
 
         if (unreadCount > 0) {
-            chatBadge.setVisible(true);
-            chatBadge.setNumber(unreadCount);
-            BadgeUtils.attachBadgeDrawable(chatBadge, bubbleBtn, root);
+            badgeTextView.setVisibility(View.VISIBLE);
+            badgeTextView.setText(unreadCount > 99 ? "99+" : String.valueOf(unreadCount));
         } else {
-            chatBadge.clearNumber();
-            chatBadge.setVisible(false);
-            BadgeUtils.detachBadgeDrawable(chatBadge, bubbleBtn);
+            badgeTextView.setVisibility(View.GONE);
         }
     }
 
@@ -242,6 +258,15 @@ public abstract class BaseCustomerActivity extends AppCompatActivity {
         circle.setColor(0xFF6C63FF); // brand purple
         circle.setStroke(0, 0);
         return circle;
+    }
+
+    private GradientDrawable buildBadgeBackground() {
+        GradientDrawable bg = new GradientDrawable();
+        bg.setShape(GradientDrawable.RECTANGLE);
+        bg.setCornerRadius(dpToPx(12)); // Pill shape
+        bg.setColor(0xFFE53935); // Red color
+        bg.setStroke(dpToPx(1.5f), 0xFFFFFFFF); // White border to stand out
+        return bg;
     }
 
     // ─── Open chat with admin ─────────────────────────────────────────────────
