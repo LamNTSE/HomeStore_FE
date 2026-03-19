@@ -10,15 +10,18 @@ public class Feedback {
     private String comment;
     private String adminReply;
     private String adminReplyAt;
+
+    private int orderId;
     private String createdAt;
     private String updatedAt;
 
-    public Feedback(int feedbackId, int userId, String userFullName,
+    public Feedback(int feedbackId, int userId, int orderId , String userFullName,
                     int productId, String productName, int rating,
                     String comment, String adminReply, String adminReplyAt,
                     String createdAt, String updatedAt) {
         this.feedbackId = feedbackId;
         this.userId = userId;
+        this.orderId = orderId;
         this.userFullName = userFullName;
         this.productId = productId;
         this.productName = productName;
@@ -41,7 +44,13 @@ public class Feedback {
     public String getAdminReplyAt() { return adminReplyAt; }
     public String getCreatedAt() { return createdAt; }
     public String getUpdatedAt() { return updatedAt; }
+    public int getOrderId() { return orderId; }
 
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
+    }
     public void setAdminReply(String adminReply) { this.adminReply = adminReply; }
     public void setRating(int rating) { this.rating = rating; }
     public void setComment(String comment) { this.comment = comment; }

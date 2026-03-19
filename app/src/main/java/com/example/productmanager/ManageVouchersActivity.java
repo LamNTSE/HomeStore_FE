@@ -175,6 +175,10 @@ public class ManageVouchersActivity extends AppCompatActivity {
         TextInputEditText edtEndDate = view.findViewById(R.id.edtEndDate);
         SwitchMaterial switchActive = view.findViewById(R.id.switchActive);
 
+        // 🔥 RESET mặc định (fix bug giữ trạng thái cũ)
+        switchActive.setChecked(false);
+        switchActive.jumpDrawablesToCurrentState();
+
         Calendar startCalendar = Calendar.getInstance();
         Calendar endCalendar = Calendar.getInstance();
 
@@ -201,13 +205,14 @@ public class ManageVouchersActivity extends AppCompatActivity {
             edtValue.setText(String.valueOf(voucher.getDiscountValue()));
             edtMinOrder.setText(String.valueOf(voucher.getMinOrderValue()));
             edtMaxUsage.setText(String.valueOf(voucher.getMaxUsageCount()));
+
+            // EDIT → lấy đúng trạng thái từ server
             switchActive.setChecked(voucher.isActive());
 
             if ("FIXED".equalsIgnoreCase(voucher.getDiscountType())) {
                 spDiscountType.setSelection(1);
             }
 
-            // giữ nguyên chuỗi backend trả về (ISO)
             edtStartDate.setText(voucher.getStartDate());
             edtEndDate.setText(voucher.getExpiryDate());
         }
@@ -268,10 +273,6 @@ public class ManageVouchersActivity extends AppCompatActivity {
             String start = isoFormat.format(startCalendar.getTime());
             String end = isoFormat.format(endCalendar.getTime());
 
-            Log.d("DATE_DEBUG", start);
-            Log.d("DATE_DEBUG", end);
-            Log.d("DATE_DEBUG", start);
-            Log.d("DATE_DEBUG", end);
             ApiClient.DataCallback<Void> callback =
                     new ApiClient.DataCallback<Void>() {
 
@@ -339,7 +340,6 @@ public class ManageVouchersActivity extends AppCompatActivity {
 
         dialog.show();
     }
-
     private void showDatePicker(TextInputEditText editText,
                                 Calendar calendar) {
 
