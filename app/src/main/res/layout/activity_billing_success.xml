@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Thanh toán thành công!"
+        android:text="Đặt hàng thành công!"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#4CAF50"
