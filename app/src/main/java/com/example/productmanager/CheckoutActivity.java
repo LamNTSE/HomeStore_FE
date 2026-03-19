@@ -89,9 +89,17 @@ public class CheckoutActivity extends BaseCustomerActivity {
 
                 if (data == null) return;
 
-                edtReceiverName.setText(data.optString("fullName", ""));
-                edtPhone.setText(data.optString("phone", ""));
-                edtAddress.setText(data.optString("address", ""));
+                String fullName = data.isNull("fullName") ? "" : data.optString("fullName", "");
+                String phone = data.isNull("phone") ? "" : data.optString("phone", "");
+                String address = data.isNull("address") ? "" : data.optString("address", "");
+
+                if (fullName.equals("null")) fullName = "";
+                if (phone.equals("null")) phone = "";
+                if (address.equals("null")) address = "";
+
+                edtReceiverName.setText(fullName);
+                edtPhone.setText(phone);
+                edtAddress.setText(address);
             }
 
             @Override
@@ -124,7 +132,8 @@ public class CheckoutActivity extends BaseCustomerActivity {
         String phone = getText(edtPhone);
         String address = getText(edtAddress);
 
-        if (name.isEmpty() || phone.isEmpty() || address.isEmpty()) {
+        if (name.isEmpty() || phone.isEmpty() || address.isEmpty() ||
+            name.equalsIgnoreCase("null") || phone.equalsIgnoreCase("null") || address.equalsIgnoreCase("null")) {
 
             Toast.makeText(this,
                     "Vui lòng điền đầy đủ thông tin giao hàng",

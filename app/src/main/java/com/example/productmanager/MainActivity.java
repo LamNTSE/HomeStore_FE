@@ -112,6 +112,18 @@ public class MainActivity extends BaseCustomerActivity
         loadProducts("");
         loadCategories();
 
+        if (!isAdmin) {
+            SignalRManager.getInstance().connectCart(authToken);
+            SignalRManager.getInstance().setCartUpdateListener(msgJson -> {
+                NotificationHelper.showNotification(
+                        MainActivity.this, 
+                        "Cập nhật Giỏ Hàng", 
+                        "Một sản phẩm trong giỏ hàng của bạn vừa bị ngừng kinh doanh và đã tự động gỡ bỏ."
+                );
+                updateCartBadge();
+            });
+        }
+
         // =============================
         // CART CLICK
         // =============================
@@ -224,6 +236,7 @@ public class MainActivity extends BaseCustomerActivity
 
                 if (item.getItemId() == R.id.menuLogout) {
 
+                    SignalRManager.getInstance().disconnectAll();
                     SessionManager.clear(MainActivity.this);
 
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);

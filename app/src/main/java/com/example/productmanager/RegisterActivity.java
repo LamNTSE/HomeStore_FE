@@ -1,11 +1,13 @@
 package com.example.productmanager;
+
 import com.example.productmanager.ApiClient.DataCallback;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +16,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText edtFullName, edtEmail, edtPassword, edtPhone, edtAddress;
     private Button btnRegister;
+    private TextView txtLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,10 +34,19 @@ public class RegisterActivity extends AppCompatActivity {
         edtPhone = findViewById(R.id.edtPhone);
         edtAddress = findViewById(R.id.edtAddress);
         btnRegister = findViewById(R.id.btnRegister);
+        txtLogin = findViewById(R.id.txtLogin);
     }
 
     private void setupEvents() {
         btnRegister.setOnClickListener(v -> handleRegister());
+
+        // 👉 Click về Login + animation
+        txtLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+            finish();
+        });
     }
 
     private void handleRegister() {
@@ -91,8 +103,10 @@ public class RegisterActivity extends AppCompatActivity {
                                     message,
                                     Toast.LENGTH_LONG).show();
 
-                            // Chuyển về Login sau khi đăng ký thành công
-                            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                            // 👉 Thành công → về Login + animation
+                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
                             finish();
                         });
                     }
