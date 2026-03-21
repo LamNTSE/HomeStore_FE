@@ -4,6 +4,8 @@ import static com.example.productmanager.ApiConfig.BASE_URL;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.DefaultRetryPolicy;
@@ -17,6 +19,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -2004,6 +2009,98 @@ public class ApiClient {
         };
 
         getQueue(context).add(request);
+    }
+
+    public static void uploadImage(Context context, String token, Uri imageUri, DataCallback<String> callback) {
+
+        String url = ApiConfig.BASE_URL + "/upload"; // BASE_URL phải có /api
+
+        try {
+            InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
+            if (inputStream == null) {
+                callback.onError("Không đọc được file");
+                return;
+            }
+
+            byte[] bytes = getBytes(inputStream);
+            inputStream.close();
+
+            // ✅ Detect MIME type
+            String fileName = "image.jpg";
+            String type = context.getContentResolver().getType(imageUri);
+            if (type != null) {
+                if (type.contains("png")) fileName = "image.png";
+                else if (type.contains("jpeg") || type.contains("jpg")) fileName = "image.jpg";
+            }
+
+            // ❗ Optional: limit size
+            if (bytes.length > 5 * 1024 * 1024) {
+                callback.onError("Ảnh quá lớn (>5MB)");
+                return;
+            }
+
+            Map<String, VolleyMultipartRequest.DataPart> params = new HashMap<>();
+            params.put("file", new VolleyMultipartRequest.DataPart(fileName, bytes));
+
+            // 🔥 Chỉ thêm Authorization, KHÔNG thêm Content-Type
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "Bearer " + token);
+
+            VolleyMultipartRequest request = new VolleyMultipartRequest(
+                    Request.Method.POST,
+                    url,
+                    headers,
+                    params,
+                    response -> {
+                        try {
+                            String res = new String(response.data, "UTF-8");
+                            JSONObject obj = new JSONObject(res);
+
+                            // Server trả về { "filePath": "/images/xxx.png" }
+                            String imageUrl = obj.optString("filePath", "");
+
+                            if (imageUrl.isEmpty()) {
+                                callback.onError("Server không trả filePath");
+                                return;
+                            }
+
+                            callback.onSuccess(imageUrl, "Upload thành công");
+
+                        } catch (Exception e) {
+                            callback.onError("Parse lỗi: " + e.getMessage());
+                        }
+                    },
+                    error -> {
+                        if (error.networkResponse != null) {
+                            String res = new String(error.networkResponse.data);
+                            Log.e("UPLOAD_ERROR", "CODE: " + error.networkResponse.statusCode);
+                            Log.e("UPLOAD_ERROR", res);
+                        } else {
+                            Log.e("UPLOAD_ERROR", error.toString());
+                        }
+                        callback.onError("Upload lỗi: " + getErrorMessage(error));
+                    }
+            );
+
+            getQueue(context).add(request);
+
+        } catch (Exception e) {
+            callback.onError("Lỗi đọc file: " + e.getMessage());
+        }
+    }
+
+    public static byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        int nRead;
+        byte[] data = new byte[4096];
+
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+
+        buffer.flush();
+        return buffer.toByteArray();
     }
 
 }
