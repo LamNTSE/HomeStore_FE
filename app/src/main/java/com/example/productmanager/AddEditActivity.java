@@ -13,6 +13,8 @@ import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+
 import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -270,6 +272,12 @@ public class AddEditActivity extends AppCompatActivity {
             return;
         }
 
+        // 🔥 CHECK ẢNH (QUAN TRỌNG)
+        if (currentImageUrl == null || currentImageUrl.isEmpty()) {
+            Toast.makeText(this, "Vui lòng upload ảnh!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         double price = Double.parseDouble(priceStr);
         int stockQuantity = Integer.parseInt(stockStr);
 
@@ -371,21 +379,40 @@ public class AddEditActivity extends AppCompatActivity {
 
             try {
 
+                // Preview ảnh
                 InputStream is = getContentResolver().openInputStream(uri);
                 Bitmap bm = BitmapFactory.decodeStream(is);
-
                 imgPreview.setImageBitmap(bm);
 
-                currentImageUrl = null;
+                // 🔥 UPLOAD ẢNH LÊN SERVER
+                ApiClient.uploadImage(this, authToken, uri, new ApiClient.DataCallback<String>() {
 
-                Toast.makeText(
-                        this,
-                        "Ảnh chỉ preview, API dùng URL server!",
-                        Toast.LENGTH_SHORT
-                ).show();
+                    @Override
+                    public void onSuccess(String filePath, String message) {
+                        // Ghép domain + filePath
+
+                        currentImageUrl = filePath;
+
+                        // Load bằng Glide
+                        Glide.with(AddEditActivity.this)
+                                .load(currentImageUrl)
+                                .into(imgPreview);
+
+                        Toast.makeText(AddEditActivity.this, "Upload thành công!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+
+                        Toast.makeText(
+                                AddEditActivity.this,
+                                "Upload lỗi: " + errorMessage,
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                });
 
             }
-
             catch (Exception e) {
 
                 Toast.makeText(this, "Lỗi ảnh!", Toast.LENGTH_SHORT).show();
